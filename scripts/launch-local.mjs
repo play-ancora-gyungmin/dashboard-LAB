@@ -1,10 +1,12 @@
 import { spawn } from "node:child_process";
 
+import { spawnPnpm } from "./pnpm-runner.mjs";
+
 const LOG_PREFIX = "[dashboard-lab]";
 
 let openedBrowser = false;
 
-const child = spawn("pnpm", ["dev"], {
+const child = spawnPnpm(["dev"], {
   env: { ...process.env },
   stdio: ["inherit", "pipe", "pipe"],
 });

@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawnPnpm } from "../scripts/pnpm-runner.mjs";
 
 const LOG_PREFIX = "[dashboard-lab-electron]";
 const APP_URL_PATTERN = /\[dashboard-lab\] app (http:\/\/[^\s]+)/;
@@ -7,7 +7,7 @@ let electronChild = null;
 let runtimeReady = false;
 let shuttingDown = false;
 
-const devChild = spawn("pnpm", ["dev"], {
+const devChild = spawnPnpm(["dev"], {
   env: { ...process.env },
   stdio: ["inherit", "pipe", "pipe"],
 });
@@ -60,7 +60,7 @@ function maybeLaunchElectron(text) {
   const appUrl = match[1];
   console.log(`${LOG_PREFIX} launching Electron at ${appUrl}`);
 
-  electronChild = spawn("pnpm", ["exec", "electron", "."], {
+  electronChild = spawnPnpm(["exec", "electron", "."], {
     env: {
       ...process.env,
       DASHBOARD_LAB_APP_URL: appUrl,

@@ -1,11 +1,10 @@
-import { spawn } from "node:child_process";
+import { runPnpm } from "./pnpm-runner.mjs";
 
 const mode = process.argv[2] ?? "dir";
 const targetArgs = resolveTargetArgs(mode);
 
-await runCommand("pnpm", ["build"]);
-await runCommand(
-  "pnpm",
+await runPnpm(["build"]);
+await runPnpm(
   [
     "exec",
     "electron-builder",
@@ -43,23 +42,4 @@ function resolveTargetArgs(mode) {
   throw new Error(
     `Unsupported desktop build mode: ${mode}. Expected one of dir, dist, dist:mac, dist:win, dist:linux.`,
   );
-}
-
-function runCommand(command, args, options = {}) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      stdio: "inherit",
-      env: options.env ?? process.env,
-    });
-
-    child.on("error", reject);
-    child.on("exit", (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-
-      reject(new Error(`${command} ${args.join(" ")} exited with code ${code ?? "unknown"}`));
-    });
-  });
 }
