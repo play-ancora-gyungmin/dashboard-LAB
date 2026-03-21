@@ -16,14 +16,17 @@ import type { OverviewResponse } from "@/lib/types";
 const HOME_SECTION_KEY = CLIENT_STORAGE_KEYS.homeSections;
 
 interface HomeTabProps {
-  data: OverviewResponse;
+  data: OverviewResponse | null;
+  loading?: boolean;
+  error?: string | null;
 }
 
-export function HomeTab({ data }: HomeTabProps) {
+export function HomeTab({ data, loading = false, error = null }: HomeTabProps) {
+  const safeData = data ?? createEmptyOverviewData();
   const [openSections, setOpenSections] = useState<string[]>(defaultHomeSections());
-  const combinedClaudeItems = [...data.skills, ...data.commands];
+  const combinedClaudeItems = [...safeData.skills, ...safeData.commands];
   const quickCommands = [
-    ...data.commands.slice(0, 4).map((command) => ({
+    ...safeData.commands.slice(0, 4).map((command) => ({
       label: command.name,
       value: command.command,
       description: command.description,
@@ -47,17 +50,25 @@ export function HomeTab({ data }: HomeTabProps) {
   return (
     <div className="flex flex-col gap-8">
       <PinnedBar />
+      {loading || error ? (
+        <section className="rounded-2xl border border-white/8 bg-[#1e1e1e] p-4 text-sm">
+          <p className="font-medium text-white">
+            {loading ? "홈 요약 데이터를 불러오는 중입니다." : "홈 요약 데이터를 불러오지 못했습니다."}
+          </p>
+          {error ? <p className="mt-2 text-[var(--color-muted)]">{error}</p> : null}
+        </section>
+      ) : null}
       <section className="grid gap-4 lg:grid-cols-4">
-        <StatCard label="에이전트" value={data.stats.totalAgents} accent="purple" />
-        <StatCard label="팀" value={data.stats.totalTeams} accent="purple" />
-        <StatCard label="Claude 스킬" value={data.stats.totalSkills} accent="purple" />
-        <StatCard label="Codex 스킬" value={data.stats.totalCodexSkills} accent="emerald" />
+        <StatCard label="에이전트" value={safeData.stats.totalAgents} accent="purple" />
+        <StatCard label="팀" value={safeData.stats.totalTeams} accent="purple" />
+        <StatCard label="Claude 스킬" value={safeData.stats.totalSkills} accent="purple" />
+        <StatCard label="Codex 스킬" value={safeData.stats.totalCodexSkills} accent="emerald" />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
-        <ToolCard tool={data.tools.claude} accent="#c084fc" />
-        <ToolCard tool={data.tools.codex} accent="#34d399" />
-        <ToolCard tool={data.tools.gemini} accent="#60a5fa" />
+        <ToolCard tool={safeData.tools.claude} accent="#c084fc" />
+        <ToolCard tool={safeData.tools.codex} accent="#34d399" />
+        <ToolCard tool={safeData.tools.gemini} accent="#60a5fa" />
       </section>
 
       <HomeSection
@@ -76,13 +87,13 @@ export function HomeTab({ data }: HomeTabProps) {
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs text-white/70">
-              {data.todayWork.length}건
+              {safeData.todayWork.length}건
             </span>
           </div>
 
-          {data.todayWork.length > 0 ? (
+          {safeData.todayWork.length > 0 ? (
             <div className="mt-4 space-y-3">
-              {data.todayWork.map((item) => (
+              {safeData.todayWork.map((item) => (
                 <article key={item.id} className="rounded-2xl border border-white/8 bg-black/15 px-4 py-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -117,7 +128,7 @@ export function HomeTab({ data }: HomeTabProps) {
         openSections={openSections}
         setOpenSections={setOpenSections}
       >
-        <AgentGrid agents={data.agents} />
+        <AgentGrid agents={safeData.agents} />
       </HomeSection>
 
       <HomeSection
@@ -127,7 +138,7 @@ export function HomeTab({ data }: HomeTabProps) {
         openSections={openSections}
         setOpenSections={setOpenSections}
       >
-        <TeamGrid teams={data.teams} />
+        <TeamGrid teams={safeData.teams} />
       </HomeSection>
 
       <HomeSection
@@ -154,7 +165,7 @@ export function HomeTab({ data }: HomeTabProps) {
             placeholder="Claude 스킬이나 커맨드 검색"
           />
           <SkillList
-            items={[...data.codex.skills, ...data.codex.promptSkills]}
+            items={[...safeData.codex.skills, ...safeData.codex.promptSkills]}
             title="Codex 스킬"
             placeholder="Codex 스킬 검색"
           />
@@ -168,7 +179,7 @@ export function HomeTab({ data }: HomeTabProps) {
         openSections={openSections}
         setOpenSections={setOpenSections}
       >
-        <McpPanel servers={data.mcpServers} />
+        <McpPanel servers={safeData.mcpServers} />
       </HomeSection>
 
       <HomeSection
@@ -179,12 +190,53 @@ export function HomeTab({ data }: HomeTabProps) {
         setOpenSections={setOpenSections}
       >
         <section className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
-          <SummaryPanel title="Codex Role 요약" body={data.codex.roleSummary || "ROLE.md가 없습니다"} />
-          <SummaryPanel title="Gemini 정책" body={data.gemini.policySummary || "GEMINI.md가 없습니다"} />
+          <SummaryPanel title="Codex Role 요약" body={safeData.codex.roleSummary || "ROLE.md가 없습니다"} />
+          <SummaryPanel title="Gemini 정책" body={safeData.gemini.policySummary || "GEMINI.md가 없습니다"} />
         </section>
       </HomeSection>
     </div>
   );
+}
+
+function createEmptyOverviewData(): OverviewResponse {
+  return {
+    timestamp: "",
+    tools: {
+      claude: { name: "Claude Code", version: "unknown", configPath: "", exists: false },
+      codex: { name: "Codex CLI", version: "unknown", configPath: "", exists: false },
+      gemini: { name: "Gemini CLI", version: "unknown", configPath: "", exists: false },
+    },
+    agents: [],
+    teams: [],
+    skills: [],
+    commands: [],
+    mcpServers: [],
+    codex: {
+      version: "unknown",
+      skills: [],
+      promptSkills: [],
+      hasRoleFile: false,
+      roleSummary: "",
+      roleFilePath: "",
+    },
+    gemini: {
+      version: "unknown",
+      authType: "unknown",
+      policySummary: "",
+      settings: {},
+      settingsPath: "",
+      policyPath: "",
+    },
+    stats: {
+      totalAgents: 0,
+      totalTeams: 0,
+      totalSkills: 0,
+      totalCommands: 0,
+      totalMcpServers: 0,
+      totalCodexSkills: 0,
+    },
+    todayWork: [],
+  };
 }
 
 function HomeSection({

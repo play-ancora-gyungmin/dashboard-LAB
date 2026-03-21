@@ -14,7 +14,7 @@ import { DASHBOARD_TAB_META } from "@/lib/dashboard-guides";
 import type { OverviewResponse } from "@/lib/types";
 
 interface DashboardProps {
-  data: OverviewResponse;
+  data?: OverviewResponse | null;
 }
 
 const ONBOARDING_STORAGE_KEY = CLIENT_STORAGE_KEYS.onboardingDismissed;
@@ -88,6 +88,9 @@ export function Dashboard({ data }: DashboardProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [overviewData, setOverviewData] = useState<OverviewResponse | null>(data ?? null);
+  const [overviewLoading, setOverviewLoading] = useState(!data);
+  const [overviewError, setOverviewError] = useState<string | null>(null);
   const meta = DASHBOARD_TAB_META[activeTab];
 
   useEffect(() => {
@@ -106,6 +109,45 @@ export function Dashboard({ data }: DashboardProps) {
     } catch {
       setOnboardingOpen(true);
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOverview() {
+      setOverviewLoading(true);
+      setOverviewError(null);
+
+      try {
+        const response = await fetch("/api/overview", { cache: "no-store" });
+
+        if (!response.ok) {
+          throw new Error("홈 요약 데이터를 불러오지 못했습니다.");
+        }
+
+        const nextOverview = (await response.json()) as OverviewResponse;
+
+        if (!cancelled) {
+          setOverviewData(nextOverview);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setOverviewError(
+            error instanceof Error ? error.message : "홈 요약 데이터를 불러오지 못했습니다.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setOverviewLoading(false);
+        }
+      }
+    }
+
+    void loadOverview();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function handleTabChange(tab: DashboardTabId) {
@@ -160,7 +202,13 @@ export function Dashboard({ data }: DashboardProps) {
 
           <div className="flex-1 overflow-y-auto px-6 py-6 md:px-8">
             <section className="mx-auto max-w-7xl space-y-6">
-              {activeTab === "home" ? <HomeTab data={data} /> : null}
+              {activeTab === "home" ? (
+                <HomeTab
+                  data={overviewData}
+                  loading={overviewLoading}
+                  error={overviewError}
+                />
+              ) : null}
               {activeTab === "aiskills" ? <AiSkillsTab /> : null}
               {activeTab === "cshelper" ? <CsTab /> : null}
               {activeTab === "projects" ? <ProjectsTab /> : null}
