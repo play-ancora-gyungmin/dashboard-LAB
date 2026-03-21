@@ -9,6 +9,8 @@ await runPnpm(
     "exec",
     "electron-builder",
     ...targetArgs,
+    "--publish",
+    "never",
   ],
   {
     env: {
