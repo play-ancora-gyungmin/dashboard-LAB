@@ -115,6 +115,7 @@ That tag triggers the release workflow and uploads macOS, Windows, and Linux art
 
 Detailed notes:
 - `docs/ELECTRON_DESKTOP_PLAN.md`
+- `docs/DEPLOYMENT_READINESS.md`
 - `docs/V0_1_5_CHECKLIST.md`
 - `CONTRIBUTING.md`
 - `SECURITY.md`
@@ -201,6 +202,17 @@ pnpm lint
 - The desktop app is stable on macOS and experimental on Windows/Linux.
 - Release artifacts are built locally into `release/`.
 - This repository uses the MIT license.
+
+## Current Readiness
+
+- macOS: recommended path for real users today
+- Windows: usable, but still needs installer smoke testing on a clean machine
+- Linux: usable, but still needs installer smoke testing on a clean machine
+- fully zero-config onboarding for every user: not finished yet
+
+The current product works best when one of these is true:
+- local `claude` or `codex` CLI is already available
+- or an OpenAI API key is saved during onboarding for fallback generation
 
 The local runner prints a dynamic app URL and terminal WebSocket port:
 
