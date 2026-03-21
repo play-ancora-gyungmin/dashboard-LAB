@@ -107,8 +107,8 @@ pnpm desktop:dist:linux
 GitHub release from the current version tag:
 
 ```bash
-git tag v0.1.3
-git push origin v0.1.3
+git tag v0.1.4
+git push origin v0.1.4
 ```
 
 That tag triggers the release workflow and uploads macOS, Windows, and Linux artifacts to GitHub Releases.
