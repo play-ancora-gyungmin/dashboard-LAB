@@ -26,7 +26,6 @@ export async function POST(request: Request) {
 
     updateRuntimeSettings({
       projectsRoot: readOptionalString(payload.paths?.projectsRoot),
-      obsidianVault: readOptionalString(payload.paths?.obsidianVault),
       prdSaveDir: readOptionalString(payload.paths?.prdSaveDir),
       csContextsDir: readOptionalString(payload.paths?.csContextsDir),
       allowedRoots: readOptionalStringArray(payload.paths?.allowedRoots),

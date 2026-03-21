@@ -42,9 +42,9 @@ export function SearchResultItem({ result, active, onSelect }: SearchResultItemP
 }
 
 function isFileResult(type: GlobalSearchResult["type"]) {
-  return type === "obsidian-note" || type === "ai-doc";
+  return type === "ai-doc";
 }
 
 function getExtension(type: GlobalSearchResult["type"]) {
-  return type === "obsidian-note" ? "md" : "txt";
+  return type === "ai-doc" ? "txt" : "";
 }

@@ -5,7 +5,6 @@ export type SearchResultType =
   | "command"
   | "mcp"
   | "project"
-  | "obsidian-note"
   | "ai-doc"
   | "app";
 

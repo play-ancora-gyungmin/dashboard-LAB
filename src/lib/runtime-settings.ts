@@ -12,7 +12,6 @@ const DEFAULT_SETTINGS: DashboardLabRuntimeSettings = {
   version: 1,
   paths: {
     projectsRoot: null,
-    obsidianVault: null,
     prdSaveDir: null,
     csContextsDir: null,
     allowedRoots: [],
@@ -124,7 +123,6 @@ function normalizeRuntimeSettings(
     version: 1,
     paths: {
       projectsRoot: normalizePath(paths.projectsRoot),
-      obsidianVault: normalizePath(paths.obsidianVault),
       prdSaveDir: normalizePath(paths.prdSaveDir),
       csContextsDir: normalizePath(paths.csContextsDir),
       allowedRoots: normalizePaths(paths.allowedRoots),

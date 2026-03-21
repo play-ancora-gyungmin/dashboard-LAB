@@ -42,7 +42,6 @@
 개인 절대 경로를 코드에 박지 않는다.
 
 - `projectsRoot`
-- `obsidianVault`
 - `prdSaveDir`
 - `csContextsDir`
 - `allowedRoots`
@@ -83,7 +82,7 @@
 - AI Skills
 - CS Helper
 - Projects summary
-- Doc/Obsidian indexing
+- Doc indexing
 
 ### Runtime Config
 
@@ -116,14 +115,12 @@
 현재 스캐폴드 기준 환경 변수:
 
 - `DASHBOARD_LAB_PROJECTS_ROOT`
-- `DASHBOARD_LAB_OBSIDIAN_VAULT`
 - `DASHBOARD_LAB_PRD_SAVE_DIR`
 - `DASHBOARD_LAB_CS_CONTEXTS_DIR`
 
 런타임 기본값:
 
 - `projectsRoot`: `~/Desktop` 우선, 없으면 현재 workspace
-- `obsidianVault`: iCloud/일반 Obsidian 후보를 자동 탐색
 - `prdSaveDir`: `<workspace>/data/prd`
 - `csContextsDir`: `<workspace>/cs-contexts`
 
@@ -140,7 +137,6 @@
 ### Step 2. Source Discovery
 
 - 프로젝트 루트 후보
-- Obsidian vault 후보
 - Claude/Codex/Gemini 설정 경로
 - 저장 루트 후보
 
@@ -171,7 +167,6 @@
 - PRD 저장 경로
 - CS 컨텍스트 루트
 - 프로젝트 스캔 루트
-- Obsidian vault 탐색
 
 ### 다음 단계
 

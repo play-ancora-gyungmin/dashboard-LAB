@@ -4,7 +4,7 @@ import type { DashboardTabId } from "@/components/TabNav";
 import { CLIENT_EVENTS, CLIENT_STORAGE_KEYS } from "@/lib/client-keys";
 
 export interface DashboardNavigationTarget {
-  tab: DashboardTabId | "info-hub" | "obsidian" | "terminal";
+  tab: DashboardTabId | "info-hub" | "terminal";
   payload?: Record<string, string>;
 }
 
@@ -64,7 +64,7 @@ function normalizeTab(tab: DashboardNavigationTarget["tab"]) {
     return "infohub";
   }
 
-  if (tab === "obsidian" || tab === "terminal") {
+  if (tab === "terminal") {
     return "home";
   }
 

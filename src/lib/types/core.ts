@@ -147,52 +147,6 @@ export interface ProjectsResponse {
   projects: ProjectInfo[];
 }
 
-export interface ObsidianNote {
-  name: string;
-  path: string;
-  absPath: string;
-  type: "file" | "folder";
-  children?: ObsidianNote[];
-  tags: string[];
-  frontmatter: Record<string, unknown>;
-  lastModified: string;
-  lastModifiedTimestamp: number;
-  sizeBytes: number;
-  preview: string;
-  isDownloaded?: boolean;
-}
-
-export interface TagInfo {
-  name: string;
-  count: number;
-}
-
-export interface ObsidianTreeResponse {
-  vaultPath: string;
-  tree: ObsidianNote[];
-  totalFiles: number;
-  totalFolders: number;
-  tags: TagInfo[];
-  recentNotes: ObsidianNote[];
-}
-
-export interface ObsidianNoteContent {
-  path: string;
-  name: string;
-  content: string;
-  frontmatter: Record<string, unknown>;
-  tags: string[];
-  wikiLinks: string[];
-  lastModified: string;
-  isDownloaded?: boolean;
-}
-
-export interface ObsidianSearchResult {
-  note: ObsidianNote;
-  matchType: "title" | "content" | "tag";
-  snippet: string;
-}
-
 export interface OverviewStats {
   totalAgents: number;
   totalTeams: number;

@@ -123,7 +123,6 @@ export interface DashboardLabRuntimeIntegrations {
 
 export interface DashboardLabRuntimeSettingsPaths {
   projectsRoot: string | null;
-  obsidianVault: string | null;
   prdSaveDir: string | null;
   csContextsDir: string | null;
   allowedRoots: string[];
@@ -167,14 +166,12 @@ export interface DashboardLabRuntimeSummaryResponse {
   settings: DashboardLabRuntimeSettings;
   resolvedPaths: {
     projectsRoot: DashboardLabRuntimePathStatus;
-    obsidianVault: DashboardLabRuntimePathStatus;
     prdSaveDir: DashboardLabRuntimePathStatus;
     csContextsDir: DashboardLabRuntimePathStatus;
     allowedRoots: string[];
   };
   discovery: {
     projectsRootCandidates: DashboardLabRuntimePathCandidate[];
-    obsidianVaultCandidates: DashboardLabRuntimePathCandidate[];
   };
   integrations: DashboardLabRuntimeIntegrations;
   checks: DashboardLabRuntimeCheck[];

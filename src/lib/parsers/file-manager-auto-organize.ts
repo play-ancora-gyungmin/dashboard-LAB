@@ -191,7 +191,7 @@ function isProtected(file: ScannedFile) {
     looksLikeDirectory ||
     name.startsWith(".") ||
     aiConfigNames.includes(name) ||
-    ["/.claude", "/.codex", "/.gemini", "/Obsidian Vault/"].some((segment) => file.path.includes(segment))
+    ["/.claude", "/.codex", "/.gemini"].some((segment) => file.path.includes(segment))
   );
 }
 

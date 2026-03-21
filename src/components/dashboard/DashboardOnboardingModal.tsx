@@ -57,7 +57,6 @@ const QUICK_STARTS: Array<{
 
 type RuntimeDraft = {
   projectsRoot: string;
-  obsidianVault: string;
   prdSaveDir: string;
   csContextsDir: string;
   openaiApiKey: string;
@@ -65,7 +64,6 @@ type RuntimeDraft = {
 
 const EMPTY_DRAFT: RuntimeDraft = {
   projectsRoot: "",
-  obsidianVault: "",
   prdSaveDir: "",
   csContextsDir: "",
   openaiApiKey: "",
@@ -111,10 +109,6 @@ export function DashboardOnboardingModal({
         projectsRoot:
           nextSummary.settings.paths.projectsRoot ??
           nextSummary.resolvedPaths.projectsRoot.path ??
-          "",
-        obsidianVault:
-          nextSummary.settings.paths.obsidianVault ??
-          nextSummary.resolvedPaths.obsidianVault.path ??
           "",
         prdSaveDir:
           nextSummary.settings.paths.prdSaveDir ??
@@ -207,12 +201,10 @@ export function DashboardOnboardingModal({
         body: JSON.stringify({
           paths: {
             projectsRoot: draft.projectsRoot,
-            obsidianVault: draft.obsidianVault,
             prdSaveDir: draft.prdSaveDir,
             csContextsDir: draft.csContextsDir,
             allowedRoots: [
               draft.projectsRoot,
-              draft.obsidianVault,
               draft.prdSaveDir,
               draft.csContextsDir,
             ].filter(Boolean),
@@ -390,7 +382,7 @@ export function DashboardOnboardingModal({
                     1. 경로와 도구 상태부터 확인
                   </p>
                   <p className="mt-1 leading-6">
-                    프로젝트 루트, Vault, 저장 경로를 확정한 뒤 기능 탭으로
+                    프로젝트 루트와 저장 경로를 확정한 뒤 기능 탭으로
                     이동합니다.
                   </p>
                 </div>
@@ -452,17 +444,6 @@ export function DashboardOnboardingModal({
                     }))
                   }
                   candidates={summary?.discovery.projectsRootCandidates ?? []}
-                />
-                <RuntimeInput
-                  label="Obsidian Vault"
-                  value={draft.obsidianVault}
-                  onChange={(value) =>
-                    setDraft((current) => ({
-                      ...current,
-                      obsidianVault: value,
-                    }))
-                  }
-                  candidates={summary?.discovery.obsidianVaultCandidates ?? []}
                 />
                 <RuntimeInput
                   label="PRD 저장 경로"

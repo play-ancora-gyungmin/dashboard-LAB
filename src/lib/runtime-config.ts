@@ -1,6 +1,6 @@
 import "server-only";
 
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -21,12 +21,10 @@ export interface DashboardLabRuntimeConfig {
     prdSaveDir: string;
     csContextsDir: string;
     projectsRoot: string;
-    obsidianVault: string | null;
     allowedRoots: string[];
   };
   discovery: {
     projectsRootCandidates: string[];
-    obsidianVaultCandidates: string[];
   };
 }
 
@@ -47,9 +45,6 @@ export function getRuntimeConfig(): DashboardLabRuntimeConfig {
   const configuredProjectsRoot =
     readEnvPath("DASHBOARD_LAB_PROJECTS_ROOT") ??
     settings.paths.projectsRoot;
-  const configuredObsidianVault =
-    readEnvPath("DASHBOARD_LAB_OBSIDIAN_VAULT") ??
-    settings.paths.obsidianVault;
   const prdSaveDir =
     readEnvPath("DASHBOARD_LAB_PRD_SAVE_DIR") ??
     settings.paths.prdSaveDir ??
@@ -69,11 +64,6 @@ export function getRuntimeConfig(): DashboardLabRuntimeConfig {
     pickFirstExistingDirectory(projectsRootCandidates) ??
     workspaceRoot;
 
-  const obsidianVaultCandidates = discoverObsidianVaultCandidates(homeDir);
-  const obsidianVault =
-    configuredObsidianVault ??
-    pickFirstExistingDirectory(obsidianVaultCandidates);
-
   return {
     app: APP_META,
     paths: {
@@ -88,52 +78,17 @@ export function getRuntimeConfig(): DashboardLabRuntimeConfig {
       prdSaveDir,
       csContextsDir,
       projectsRoot,
-      obsidianVault,
       allowedRoots: uniquePaths([
         ...settings.paths.allowedRoots,
         workspaceRoot,
         projectsRoot,
         csContextsDir,
-        obsidianVault,
       ]),
     },
     discovery: {
       projectsRootCandidates,
-      obsidianVaultCandidates,
     },
   };
-}
-
-function discoverObsidianVaultCandidates(homeDir: string) {
-  const directCandidates = uniquePaths([
-    path.join(homeDir, "Documents", "Obsidian"),
-    path.join(homeDir, "Desktop", "Obsidian"),
-    path.join(homeDir, "Obsidian"),
-  ]);
-  const icloudRoot = path.join(
-    homeDir,
-    "Library",
-    "Mobile Documents",
-    "com~apple~CloudDocs",
-    "Obsidian Vault",
-  );
-
-  return uniquePaths([...directCandidates, ...discoverVaultChildren(icloudRoot)]);
-}
-
-function discoverVaultChildren(rootPath: string) {
-  if (!existsSync(rootPath)) {
-    return [] as string[];
-  }
-
-  try {
-    return readdirSync(rootPath, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
-      .map((entry) => path.join(rootPath, entry.name))
-      .sort((left, right) => left.localeCompare(right));
-  } catch {
-    return [];
-  }
 }
 
 function pickFirstExistingDirectory(candidates: string[]) {

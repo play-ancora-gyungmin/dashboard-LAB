@@ -43,12 +43,6 @@ export function getRuntimeSummary(): DashboardLabRuntimeSummaryResponse {
         runtimeConfig.paths.projectsRoot,
         true,
       ),
-      obsidianVault: buildPathStatus(
-        "obsidianVault",
-        "Obsidian Vault",
-        runtimeConfig.paths.obsidianVault,
-        false,
-      ),
       prdSaveDir: buildPathStatus(
         "prdSaveDir",
         "PRD 저장 경로",
@@ -67,10 +61,6 @@ export function getRuntimeSummary(): DashboardLabRuntimeSummaryResponse {
       projectsRootCandidates: buildCandidates(
         runtimeConfig.discovery.projectsRootCandidates,
         runtimeConfig.paths.projectsRoot,
-      ),
-      obsidianVaultCandidates: buildCandidates(
-        runtimeConfig.discovery.obsidianVaultCandidates,
-        runtimeConfig.paths.obsidianVault,
       ),
     },
     integrations: {

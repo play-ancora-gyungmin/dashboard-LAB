@@ -16,7 +16,6 @@
 - confirm `.github/workflows/ci.yml` and `.github/workflows/release.yml` use Node 24-compatible action majors
 - confirm onboarding can save:
   - project root
-  - Obsidian vault path
   - PRD output directory
   - CS context directory
   - optional OpenAI API key

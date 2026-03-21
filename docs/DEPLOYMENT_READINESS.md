@@ -18,7 +18,7 @@ Confirmed in repository and CI:
 - packaged artifacts published for macOS, Windows, and Linux
 
 Confirmed in product behavior:
-- onboarding can save project root, Obsidian vault path, PRD output directory, and CS context directory
+- onboarding can save project root, PRD output directory, and CS context directory
 - onboarding can save an OpenAI API key for fallback usage
 - missing audio tooling is surfaced in onboarding with install guidance and partial install automation
 

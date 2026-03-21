@@ -122,7 +122,6 @@ Detailed notes:
 
 On first launch, the dashboard inspects your local environment and lets you confirm:
 - project root
-- Obsidian vault path
 - PRD output directory
 - CS context directory
 

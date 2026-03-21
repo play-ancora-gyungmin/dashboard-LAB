@@ -49,7 +49,6 @@ function groupResults(results: GlobalSearchResult[]) {
     command: "커맨드",
     mcp: "MCP",
     project: "프로젝트",
-    "obsidian-note": "옵시디언",
     "ai-doc": "문서",
     app: "앱",
   };

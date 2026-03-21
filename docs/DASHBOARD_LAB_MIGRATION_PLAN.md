@@ -12,7 +12,6 @@
 - 런타임 설정 스캐폴드 추가
 - PRD 저장 경로를 runtime config로 이동
 - CS 컨텍스트 루트와 프로젝트 스캔 루트를 runtime config 기반으로 변경
-- Obsidian vault를 하드코딩 대신 런타임 후보 탐색 기반으로 변경
 - 런처/로그/session 파일명을 `dashboard-LAB` 기준으로 변경
 - `.gitignore`에 dev 산출물과 로컬 상태 제외 규칙 추가
 
@@ -53,7 +52,7 @@
 
 1. 온보딩용 runtime doctor 응답 스키마 만들기
 2. 사용자 설정 저장소 만들기
-3. Obsidian/Projects/CS 경로를 설정 화면에서 바꿀 수 있게 만들기
+3. Projects/CS 경로를 설정 화면에서 바꿀 수 있게 만들기
 4. `data/state` 계열을 사용자 데이터 디렉터리로 분리하기
 
 ## 성공 기준
