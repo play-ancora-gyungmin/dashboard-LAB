@@ -11,6 +11,7 @@ const BASE_WS_PORT = 34877;
 const MAX_PORT = 65_535;
 const mode = process.argv[2] === "start" ? "start" : "dev";
 const DEV_SESSION_FILE = path.join(process.cwd(), ".dashboard-lab-dev-session.json");
+const terminalEnabled = process.env.DASHBOARD_LAB_DISABLE_TERMINAL !== "1";
 
 if (mode === "dev") {
   const existingSession = await readExistingDevSession();
@@ -23,7 +24,9 @@ if (mode === "dev") {
 }
 
 const appPort = await findFreePort(BASE_APP_PORT);
-const wsPort = await findFreePort(BASE_WS_PORT, new Set([appPort]));
+const wsPort = terminalEnabled
+  ? await findFreePort(BASE_WS_PORT, new Set([appPort]))
+  : BASE_WS_PORT;
 const distDir = mode === "dev" ? `.next-dev-${appPort}` : ".next";
 const env = {
   ...process.env,
@@ -46,19 +49,28 @@ const appArgs =
   mode === "start"
     ? ["start", "--hostname", HOST, "--port", String(appPort)]
     : ["dev", "--hostname", HOST, "--port", String(appPort)];
-const wsArgs = mode === "start" ? ["server/terminal-server.ts"] : ["watch", "server/terminal-server.ts"];
+const wsArgs =
+  mode === "start"
+    ? ["server/terminal-server.mjs"]
+    : ["--watch", "server/terminal-server.mjs"];
 
 console.log(`${LOG_PREFIX} app http://${HOST}:${appPort}`);
-console.log(`${LOG_PREFIX} terminal ws://${HOST}:${wsPort}`);
+if (terminalEnabled) {
+  console.log(`${LOG_PREFIX} terminal ws://${HOST}:${wsPort}`);
+} else {
+  console.log(`${LOG_PREFIX} terminal disabled`);
+}
 console.log(`${LOG_PREFIX} dist ${distDir}`);
 
 const appChild = spawn(resolveBin("next"), appArgs, { stdio: "inherit", env });
-const wsChild = spawn(resolveBin("tsx"), wsArgs, { stdio: "inherit", env });
+const wsChild = terminalEnabled
+  ? spawn(process.execPath, wsArgs, { stdio: "inherit", env })
+  : null;
 
-forwardSignals([appChild, wsChild]);
+forwardSignals([appChild, wsChild].filter(Boolean));
 
 appChild.on("exit", (code) => closeChildren(wsChild, code ?? 0));
-wsChild.on("exit", (code) => closeChildren(appChild, code ?? 0));
+wsChild?.on("exit", (code) => closeChildren(appChild, code ?? 0));
 
 async function findFreePort(startPort, blockedPorts = new Set()) {
   let port = startPort;
@@ -95,7 +107,7 @@ function forwardSignals(children) {
 }
 
 function closeChildren(otherChild, code) {
-  if (!otherChild.killed) {
+  if (otherChild && !otherChild.killed) {
     otherChild.kill("SIGTERM");
   }
 

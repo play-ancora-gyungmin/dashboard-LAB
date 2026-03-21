@@ -15,6 +15,7 @@ Core flow:
 
 Current stack:
 - Next.js 15
+- Electron desktop shell
 - local `whisper` or `whisper-cli`
 - `ffmpeg`
 - `claude` and/or `codex` CLI for document generation
@@ -46,6 +47,34 @@ pnpm setup:mac
 pnpm doctor
 pnpm launch
 ```
+
+## Desktop App
+
+Electron development mode:
+
+```bash
+pnpm assets:icon
+pnpm desktop:dev
+```
+
+Desktop build output:
+
+```bash
+pnpm assets:icon
+pnpm desktop:build
+```
+
+macOS desktop artifacts:
+
+```bash
+pnpm assets:icon
+pnpm desktop:dist:mac
+```
+
+Detailed notes:
+- `docs/ELECTRON_DESKTOP_PLAN.md`
+- `CONTRIBUTING.md`
+- `SECURITY.md`
 
 On first launch, the dashboard inspects your local environment and lets you confirm:
 - project root
@@ -89,6 +118,7 @@ If `pnpm install` reports ignored build scripts for packages like `node-pty` or 
 
 ```bash
 pnpm approve-builds
+pnpm rebuild electron node-pty
 ```
 
 Then allow the packages you want to use locally.
@@ -115,9 +145,17 @@ Before sharing the repository publicly, do not include:
 
 ```bash
 pnpm dev
+pnpm assets:icon
+pnpm desktop:dev
 pnpm type-check
 pnpm lint
 ```
+
+## Open Source Notes
+
+- The desktop app is macOS-first today.
+- Release artifacts are built locally into `release/`.
+- A license file is still required before publishing as a true open-source repository.
 
 The local runner prints a dynamic app URL and terminal WebSocket port:
 

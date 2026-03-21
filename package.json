@@ -2,6 +2,9 @@
   "name": "dashboard-lab",
   "version": "0.1.0",
   "private": true,
+  "description": "Local-first AI workspace dashboard boilerplate with Electron desktop packaging.",
+  "author": "dashboard-LAB contributors",
+  "main": "electron/main.mjs",
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "doctor": "node scripts/doctor.mjs",
@@ -10,6 +13,10 @@
     "dev": "node server/run-local.mjs dev",
     "build": "next build",
     "start": "node server/run-local.mjs start",
+    "assets:icon": "node scripts/generate-app-icon.mjs",
+    "desktop:dev": "node electron/dev-runner.mjs",
+    "desktop:build": "node scripts/desktop-build.mjs dir",
+    "desktop:dist:mac": "node scripts/desktop-build.mjs dist:mac",
     "lint": "eslint . --max-warnings=0",
     "type-check": "tsc --noEmit"
   },
@@ -28,7 +35,9 @@
     "react-file-icon": "^1.6.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "rss-parser": "^3.13.0"
+    "rss-parser": "^3.13.0",
+    "node-pty": "1.2.0-beta.12",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -39,11 +48,57 @@
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.1",
     "concurrently": "^9.2.1",
+    "electron": "^35.1.5",
+    "electron-builder": "^25.1.8",
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
-    "node-pty": "1.2.0-beta.12",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "tailwindcss": "^4",
-    "tsx": "^4.21.0",
     "typescript": "^5"
+  },
+  "build": {
+    "appId": "lab.dashboard.desktop",
+    "productName": "dashboard-LAB",
+    "asar": false,
+    "npmRebuild": false,
+    "directories": {
+      "output": "release",
+      "buildResources": "build-resources"
+    },
+    "icon": "build-resources/icon.png",
+    "files": [
+      "build-resources/**/*",
+      "electron/**/*",
+      "server/**/*",
+      "scripts/**/*",
+      "src/**/*",
+      "public/**/*",
+      ".next/**/*",
+      "docs/**/*",
+      "cs-contexts/**/*",
+      "data/**/*",
+      "models/**/*",
+      "package.json",
+      "next.config.ts",
+      "postcss.config.mjs",
+      "tsconfig.json"
+    ],
+    "mac": {
+      "icon": "build-resources/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity"
+    }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild",
+      "node-pty",
+      "sharp",
+      "unrs-resolver"
+    ]
   }
 }

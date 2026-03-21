@@ -1,26 +1,14 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 
-import { spawn, type IPty } from "node-pty";
-import { WebSocketServer, type WebSocket } from "ws";
+import { spawn } from "node-pty";
+import { WebSocketServer } from "ws";
 
 const PORT = Number(process.env.TERMINAL_WS_PORT ?? "34877");
 const HOST = "127.0.0.1";
 const MAX_SESSIONS = 5;
 
-type TerminalSessionState = {
-  pty: IPty;
-  ws: WebSocket;
-  cwd: string;
-};
-
-type ClientMessage =
-  | { type: "create"; cwd?: string }
-  | { type: "input"; sessionId: string; data: string }
-  | { type: "resize"; sessionId: string; cols: number; rows: number }
-  | { type: "close"; sessionId: string };
-
-const sessions = new Map<string, TerminalSessionState>();
+const sessions = new Map();
 const wss = new WebSocketServer({ host: HOST, port: PORT });
 
 wss.on("error", (error) => {
@@ -36,7 +24,7 @@ wss.on("error", (error) => {
 wss.on("connection", (ws) => {
   ws.on("message", (raw) => {
     try {
-      handleMessage(ws, JSON.parse(raw.toString()) as ClientMessage);
+      handleMessage(ws, JSON.parse(raw.toString()));
     } catch {
       send(ws, { type: "error", message: "invalid message" });
     }
@@ -52,7 +40,7 @@ wss.on("connection", (ws) => {
   });
 });
 
-function handleMessage(ws: WebSocket, message: ClientMessage) {
+function handleMessage(ws, message) {
   if (message.type === "create") {
     createSession(ws, message.cwd);
     return;
@@ -80,7 +68,7 @@ function handleMessage(ws: WebSocket, message: ClientMessage) {
   send(ws, { type: "closed", sessionId: message.sessionId });
 }
 
-function createSession(ws: WebSocket, cwd?: string) {
+function createSession(ws, cwd) {
   if (sessions.size >= MAX_SESSIONS) {
     send(ws, { type: "error", message: "최대 5개 세션까지만 열 수 있습니다." });
     return;
@@ -94,7 +82,7 @@ function createSession(ws: WebSocket, cwd?: string) {
     cols: 120,
     rows: 30,
     cwd: sessionCwd,
-    env: process.env as Record<string, string>,
+    env: process.env,
   });
 
   sessions.set(sessionId, { pty, ws, cwd: sessionCwd });
@@ -115,7 +103,7 @@ function createSession(ws: WebSocket, cwd?: string) {
   });
 }
 
-function getShellArgs(shell: string) {
+function getShellArgs(shell) {
   const shellName = path.basename(shell);
 
   if (shellName === "zsh" || shellName === "bash") {
@@ -125,7 +113,7 @@ function getShellArgs(shell: string) {
   return [];
 }
 
-function send(ws: WebSocket, payload: object) {
+function send(ws, payload) {
   if (ws.readyState === ws.OPEN) {
     ws.send(JSON.stringify(payload));
   }
