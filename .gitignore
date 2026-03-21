@@ -39,6 +39,7 @@ yarn-error.log*
 /data/state/*.json
 /data/prd/
 /.dashboard-lab-dev-session.json
+/.dashboard-lab-build-home/
 /.playwright-cli/
 
 # local whisper models

@@ -12,7 +12,7 @@
     "setup:mac": "bash scripts/bootstrap-macos.sh",
     "launch": "node scripts/launch-local.mjs",
     "dev": "node server/run-local.mjs dev",
-    "build": "next build",
+    "build": "node scripts/next-build.mjs",
     "start": "node server/run-local.mjs start",
     "assets:icon": "node scripts/generate-app-icon.mjs",
     "desktop:dev": "node electron/dev-runner.mjs",
