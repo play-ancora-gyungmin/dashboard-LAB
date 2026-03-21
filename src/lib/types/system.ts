@@ -117,6 +117,10 @@ export interface DashboardLabRuntimeCheckRemedy {
   url?: string;
 }
 
+export interface DashboardLabRuntimeIntegrations {
+  openaiConfigured: boolean;
+}
+
 export interface DashboardLabRuntimeSettingsPaths {
   projectsRoot: string | null;
   obsidianVault: string | null;
@@ -172,6 +176,7 @@ export interface DashboardLabRuntimeSummaryResponse {
     projectsRootCandidates: DashboardLabRuntimePathCandidate[];
     obsidianVaultCandidates: DashboardLabRuntimePathCandidate[];
   };
+  integrations: DashboardLabRuntimeIntegrations;
   checks: DashboardLabRuntimeCheck[];
 }
 

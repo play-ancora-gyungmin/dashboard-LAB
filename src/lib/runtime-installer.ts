@@ -102,6 +102,8 @@ export function getRuntimeCheckFixHint(checkId: string) {
       return "문서 생성 또는 스킬 실행에는 로그인된 Codex CLI가 필요합니다.";
     case "gemini":
       return "Gemini 기반 응답을 쓰려면 Gemini CLI가 필요합니다.";
+    case "openai-api":
+      return "OpenAI API key를 저장하면 CLI 없이도 CS Helper와 PRD 생성 fallback을 사용할 수 있습니다.";
     case "projects-root":
       return "프로젝트 루트를 저장하면 Projects, Doc Hub, CS Helper가 같은 기준으로 동작합니다.";
     default:

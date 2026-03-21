@@ -19,6 +19,14 @@ const DEFAULT_SETTINGS: DashboardLabRuntimeSettings = {
   },
 };
 
+export interface DashboardLabRuntimeSecrets {
+  openaiApiKey: string | null;
+}
+
+const DEFAULT_SECRETS: DashboardLabRuntimeSecrets = {
+  openaiApiKey: null,
+};
+
 export function readRuntimeSettings(): DashboardLabRuntimeSettings {
   const settingsFile = getSettingsFilePath();
 
@@ -58,6 +66,55 @@ export function updateRuntimeSettings(
   });
 }
 
+export function readRuntimeSecrets(): DashboardLabRuntimeSecrets {
+  const secretsFile = getSecretsFilePath();
+
+  if (!existsSync(secretsFile)) {
+    return DEFAULT_SECRETS;
+  }
+
+  try {
+    const raw = readFileSync(secretsFile, "utf8");
+    const parsed = JSON.parse(raw) as Partial<DashboardLabRuntimeSecrets>;
+    return normalizeRuntimeSecrets(parsed);
+  } catch {
+    return DEFAULT_SECRETS;
+  }
+}
+
+export function saveRuntimeSecrets(
+  next: Partial<DashboardLabRuntimeSecrets>,
+): DashboardLabRuntimeSecrets {
+  const normalized = normalizeRuntimeSecrets(next);
+  const secretsFile = getSecretsFilePath();
+  mkdirSync(path.dirname(secretsFile), { recursive: true });
+  writeFileSync(secretsFile, JSON.stringify(normalized, null, 2), "utf8");
+  return normalized;
+}
+
+export function updateRuntimeSecrets(
+  nextSecrets: Partial<DashboardLabRuntimeSecrets>,
+): DashboardLabRuntimeSecrets {
+  const current = readRuntimeSecrets();
+  return saveRuntimeSecrets({
+    ...current,
+    ...nextSecrets,
+  });
+}
+
+export function getOpenAiApiKey() {
+  const envValue = process.env.OPENAI_API_KEY?.trim();
+  if (envValue) {
+    return envValue;
+  }
+
+  return readRuntimeSecrets().openaiApiKey;
+}
+
+export function hasOpenAiApiKey() {
+  return Boolean(getOpenAiApiKey());
+}
+
 function normalizeRuntimeSettings(
   value: Partial<DashboardLabRuntimeSettings>,
 ): DashboardLabRuntimeSettings {
@@ -72,6 +129,14 @@ function normalizeRuntimeSettings(
       csContextsDir: normalizePath(paths.csContextsDir),
       allowedRoots: normalizePaths(paths.allowedRoots),
     },
+  };
+}
+
+function normalizeRuntimeSecrets(
+  value: Partial<DashboardLabRuntimeSecrets>,
+): DashboardLabRuntimeSecrets {
+  return {
+    openaiApiKey: normalizeSecret(value.openaiApiKey),
   };
 }
 
@@ -92,8 +157,21 @@ function normalizePaths(value: unknown) {
   return [...new Set(value.map(normalizePath).filter((item): item is string => Boolean(item)))];
 }
 
+function normalizeSecret(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
 function getSettingsFilePath() {
   return path.join(getRuntimeDataRoot(), "state", "runtime-settings.json");
+}
+
+function getSecretsFilePath() {
+  return path.join(getRuntimeDataRoot(), "state", "runtime-secrets.json");
 }
 
 function getRuntimeDataRoot() {

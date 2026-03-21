@@ -1,6 +1,6 @@
 import { getErrorMessage, isJsonParseError, jsonError } from "@/lib/api/error-response";
 import { getRuntimeSummary } from "@/lib/runtime-summary";
-import { updateRuntimeSettings } from "@/lib/runtime-settings";
+import { updateRuntimeSecrets, updateRuntimeSettings } from "@/lib/runtime-settings";
 import type { DashboardLabRuntimeSettingsPaths } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -14,6 +14,10 @@ export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as {
       paths?: Partial<DashboardLabRuntimeSettingsPaths>;
+      secrets?: {
+        openaiApiKey?: string;
+        clearOpenaiApiKey?: boolean;
+      };
     };
 
     if (!payload || typeof payload !== "object") {
@@ -27,6 +31,15 @@ export async function POST(request: Request) {
       csContextsDir: readOptionalString(payload.paths?.csContextsDir),
       allowedRoots: readOptionalStringArray(payload.paths?.allowedRoots),
     });
+
+    if (payload.secrets?.clearOpenaiApiKey) {
+      updateRuntimeSecrets({ openaiApiKey: null });
+    } else if (typeof payload.secrets?.openaiApiKey === "string") {
+      const trimmed = payload.secrets.openaiApiKey.trim();
+      if (trimmed) {
+        updateRuntimeSecrets({ openaiApiKey: trimmed });
+      }
+    }
 
     return Response.json(getRuntimeSummary());
   } catch (error) {

@@ -69,6 +69,7 @@ export function CsResponseView({ response, loading, onRegenerate }: CsResponseVi
             <option value="claude">Claude</option>
             <option value="codex">Codex</option>
             <option value="gemini">Gemini</option>
+            <option value="openai">OpenAI API</option>
           </select>
           <button
             type="button"

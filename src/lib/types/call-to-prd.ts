@@ -7,7 +7,7 @@ import type {
   CallUrgency,
 } from "@/lib/call-to-prd/intake-config";
 
-export const CALL_GENERATION_MODES = ["claude", "codex", "dual"] as const;
+export const CALL_GENERATION_MODES = ["claude", "codex", "dual", "openai"] as const;
 export type CallGenerationMode = (typeof CALL_GENERATION_MODES)[number];
 
 export type CallStatus =

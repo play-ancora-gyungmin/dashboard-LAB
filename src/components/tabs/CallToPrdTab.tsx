@@ -81,6 +81,11 @@ const GENERATION_MODE_OPTIONS: Array<{
     label: "Dual AI",
     description: "Claude + Codex 생성 후 머지합니다. 비용이 가장 큽니다.",
   },
+  {
+    value: "openai",
+    label: "OpenAI API",
+    description: "CLI 없이 API key만으로 문서를 생성합니다.",
+  },
 ];
 
 interface CallToPrdProjectsResponse extends ProjectsLiteResponse {
@@ -2097,7 +2102,7 @@ function formatCallToPrdFailureMessage(error: string | null) {
     return "음성 변환 도구가 준비되지 않았습니다. `python3 -m pip install openai-whisper`를 설치하거나, `whisper-cpp`를 쓰는 경우 `WHISPER_MODEL_PATH`에 실제 ggml 모델 경로를 설정한 뒤 다시 시도해 주세요.";
   }
 
-  if (error.includes("Claude 실패") || error.includes("Codex 실패")) {
+  if (error.includes("Claude 실패") || error.includes("Codex 실패") || error.includes("OpenAI API 실패")) {
     return `AI 생성 단계에서 중단되었습니다. ${error} 입력 내용은 유지되므로 프롬프트나 실행 환경을 확인한 뒤 다시 생성하면 됩니다.`;
   }
 
@@ -2159,17 +2164,31 @@ function buildStatusLabel(status: CallRecord["status"]) {
 }
 
 function getGenerationModeLabel(mode: CallGenerationMode) {
-  return {
-    claude: "Claude 단일",
-    codex: "Codex 단일",
-    dual: "Dual AI",
-  }[mode];
+  switch (mode) {
+    case "claude":
+      return "Claude 단일";
+    case "codex":
+      return "Codex 단일";
+    case "dual":
+      return "Dual AI";
+    case "openai":
+      return "OpenAI API";
+    default:
+      return "AI 생성";
+  }
 }
 
 function buildGenerationStepLabel(mode: CallGenerationMode) {
-  return {
-    claude: "PRD 생성 (Claude 단일)",
-    codex: "PRD 생성 (Codex 단일)",
-    dual: "PRD 생성 (Claude + Codex 병렬)",
-  }[mode];
+  switch (mode) {
+    case "claude":
+      return "PRD 생성 (Claude 단일)";
+    case "codex":
+      return "PRD 생성 (Codex 단일)";
+    case "dual":
+      return "PRD 생성 (Claude + Codex 병렬)";
+    case "openai":
+      return "PRD 생성 (OpenAI API)";
+    default:
+      return "PRD 생성";
+  }
 }

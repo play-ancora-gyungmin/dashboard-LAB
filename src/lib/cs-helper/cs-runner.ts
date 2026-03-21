@@ -1,3 +1,5 @@
+import { checkCommandAvailable } from "@/lib/command-availability";
+import { generateOpenAiText, hasOpenAiApiFallback } from "@/lib/openai-responses";
 import { pathExists } from "@/lib/parsers/shared";
 import { persistJson, readPersistentJson } from "@/lib/storage/persistent-json";
 import { runSpawnTask } from "@/lib/skill-runner";
@@ -30,13 +32,14 @@ export class CsRequestError extends Error {
 export async function generateCsReply(request: CsRequest) {
   validateCsRequest(request);
   const context = await loadContext(request.projectId);
+  const resolvedRunner = await resolveCsRunner(request.runner);
   const promptUsed = buildCsPrompt(request, context.content);
-  const replyResult = await runCsModel(request.runner, promptUsed);
+  const replyResult = await runCsModel(resolvedRunner, promptUsed);
   let analysis: string | null = null;
 
   if (request.includeAnalysis) {
     const analysisPrompt = buildAnalysisPrompt(request, context.content);
-    analysis = await runCsModel(request.runner, analysisPrompt);
+    analysis = await runCsModel(resolvedRunner, analysisPrompt);
   }
 
   const response: CsResponse = {
@@ -44,7 +47,7 @@ export async function generateCsReply(request: CsRequest) {
     reply: replyResult,
     analysis,
     includeAnalysis: request.includeAnalysis,
-    runner: request.runner,
+    runner: resolvedRunner,
     projectId: request.projectId,
     channel: request.channel,
     tone: request.tone,
@@ -61,12 +64,13 @@ export async function generateCsReply(request: CsRequest) {
 export async function generateCsAnalysis(request: CsRequest) {
   validateCsRequest(request);
   const context = await loadContext(request.projectId);
+  const resolvedRunner = await resolveCsRunner(request.runner);
   const promptUsed = buildAnalysisPrompt(request, context.content);
-  const analysis = await runCsModel(request.runner, promptUsed);
+  const analysis = await runCsModel(resolvedRunner, promptUsed);
   return {
     id: crypto.randomUUID(),
     analysis,
-    runner: request.runner,
+    runner: resolvedRunner,
     projectId: request.projectId,
     customerMessage: request.customerMessage,
     createdAt: new Date().toISOString(),
@@ -108,6 +112,10 @@ export function getCsResponse(id: string) {
 }
 
 async function runCsModel(runner: CsAiRunner, prompt: string) {
+  if (runner === "openai") {
+    return generateOpenAiText(prompt);
+  }
+
   if (runner === "claude") {
     const result = await runSpawnTask({
       command: "claude",
@@ -139,6 +147,46 @@ async function runCsModel(runner: CsAiRunner, prompt: string) {
     timeoutMs: CS_TIMEOUT_MS,
   });
   return unwrapOutput(result.output, result.error);
+}
+
+async function resolveCsRunner(requestedRunner: CsAiRunner): Promise<CsAiRunner> {
+  if (requestedRunner === "openai") {
+    if (!hasOpenAiApiFallback()) {
+      throw new Error("OpenAI API 키가 설정되어 있지 않습니다. 온보딩에서 API 키를 저장해 주세요.");
+    }
+
+    return "openai";
+  }
+
+  if (requestedRunner === "claude") {
+    if (await checkCommandAvailable("claude")) {
+      return "claude";
+    }
+
+    return fallbackToOpenAiOrThrow("Claude CLI");
+  }
+
+  if (requestedRunner === "codex") {
+    if (await checkCommandAvailable("codex")) {
+      return "codex";
+    }
+
+    return fallbackToOpenAiOrThrow("Codex CLI");
+  }
+
+  if (await pathExists("/opt/homebrew/bin/gemini") || await checkCommandAvailable("gemini")) {
+    return "gemini";
+  }
+
+  return fallbackToOpenAiOrThrow("Gemini CLI");
+}
+
+function fallbackToOpenAiOrThrow(label: string): CsAiRunner {
+  if (hasOpenAiApiFallback()) {
+    return "openai";
+  }
+
+  throw new Error(`${label}가 설치되어 있지 않습니다. CLI를 설치하거나 온보딩에서 OpenAI API 키를 저장해 주세요.`);
 }
 
 function validateCsRequest(request: CsRequest) {

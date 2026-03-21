@@ -26,14 +26,15 @@ pnpm assets:icon
 pnpm lint
 pnpm type-check
 pnpm desktop:build
-git tag v0.1.2
-git push origin v0.1.2
+git tag v0.1.3
+git push origin v0.1.3
 ```
 
 ## Pre-Publish Notes
 
 - `release/` is a generated artifact directory and should not be committed.
 - The packaged desktop baseline disables the embedded terminal server.
+- OpenAI API fallback is now supported for `CS Helper` and `Call to PRD` when the key is saved in onboarding.
 - macOS code signing and notarization are still optional follow-up work.
 - `asar` is currently disabled and can be hardened in a later release pass.
 - GitHub Actions still emits a non-blocking Node 20 deprecation warning for `actions/checkout@v4` and `actions/setup-node@v4`.

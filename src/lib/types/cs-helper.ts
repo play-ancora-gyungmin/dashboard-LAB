@@ -1,6 +1,6 @@
 export type CsChannel = "kakao" | "email" | "instagram" | "phone" | "other";
 export type CsTone = "friendly" | "formal" | "casual";
-export type CsAiRunner = "claude" | "codex" | "gemini";
+export type CsAiRunner = "claude" | "codex" | "gemini" | "openai";
 
 export interface CsProject {
   id: string;

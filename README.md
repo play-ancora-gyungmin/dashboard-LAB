@@ -19,6 +19,7 @@ Current stack:
 - local `whisper` or `whisper-cli`
 - `ffmpeg`
 - `claude` and/or `codex` CLI for document generation
+- optional OpenAI API fallback for `CS Helper` and `Call to PRD`
 
 ## Who This Is For
 
@@ -64,6 +65,7 @@ What you still need to install yourself:
 - `ffmpeg`
 - `whisper` or `whisper-cli`
 - `models/ggml-base.bin`
+- optional: an OpenAI API key if you want AI generation without local CLI tools
 
 ## Desktop App
 
@@ -105,8 +107,8 @@ pnpm desktop:dist:linux
 GitHub release from the current version tag:
 
 ```bash
-git tag v0.1.2
-git push origin v0.1.2
+git tag v0.1.3
+git push origin v0.1.3
 ```
 
 That tag triggers the release workflow and uploads macOS, Windows, and Linux artifacts to GitHub Releases.
@@ -132,6 +134,10 @@ Required:
 
 Needed for AI document generation:
 - `claude` CLI or `codex` CLI
+
+Optional fallback:
+- OpenAI API key saved during onboarding
+- this enables `CS Helper` and `Call to PRD` even when local AI CLIs are missing
 
 Notes:
 - speech-to-text runs locally

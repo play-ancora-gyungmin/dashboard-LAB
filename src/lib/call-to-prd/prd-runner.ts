@@ -1,9 +1,61 @@
 import { spawn } from "node:child_process";
 
+import { checkCommandAvailable } from "@/lib/command-availability";
+import { generateOpenAiText, hasOpenAiApiFallback } from "@/lib/openai-responses";
+
 const TIMEOUT_MS = 5 * 60 * 1000; // 5분
 const MAX_OUTPUT = 1024 * 1024; // 1MB
 
+export type PrdTextRunner = "claude" | "openai";
+
 export function runClaudePrd(
+  prompt: string,
+  options?: {
+    cwd?: string;
+    reasoningEffort?: "low" | "medium" | "high" | "xhigh";
+    provider?: PrdTextRunner;
+    allowOpenAiFallback?: boolean;
+  },
+): Promise<string> {
+  return resolvePrdProvider(options?.provider ?? "claude", options?.allowOpenAiFallback ?? true).then((provider) => {
+    if (provider === "openai") {
+      return generateOpenAiText(prompt, {
+        reasoningEffort: options?.reasoningEffort,
+      });
+    }
+
+    return runClaudeCliPrd(prompt, options);
+  });
+}
+
+export async function checkClaudeInstalled(): Promise<boolean> {
+  return checkCommandAvailable("claude");
+}
+
+export async function resolvePrdProvider(
+  requestedProvider: PrdTextRunner,
+  allowOpenAiFallback = true,
+): Promise<PrdTextRunner> {
+  if (requestedProvider === "openai") {
+    if (!hasOpenAiApiFallback()) {
+      throw new Error("OpenAI API 키가 설정되어 있지 않습니다. 온보딩에서 API 키를 저장해 주세요.");
+    }
+
+    return "openai";
+  }
+
+  if (await checkClaudeInstalled()) {
+    return "claude";
+  }
+
+  if (allowOpenAiFallback && hasOpenAiApiFallback()) {
+    return "openai";
+  }
+
+  throw new Error("Claude CLI가 설치되어 있지 않습니다. CLI를 설치하거나 온보딩에서 OpenAI API 키를 저장해 주세요.");
+}
+
+function runClaudeCliPrd(
   prompt: string,
   options?: { cwd?: string; reasoningEffort?: "low" | "medium" | "high" | "xhigh" },
 ): Promise<string> {

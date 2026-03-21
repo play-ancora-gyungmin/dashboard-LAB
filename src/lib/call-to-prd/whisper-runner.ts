@@ -4,6 +4,7 @@ import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import { checkCommandAvailable } from "@/lib/command-availability";
 import { getRuntimeConfig } from "@/lib/runtime-config";
 
 const execFileAsync = promisify(execFile);
@@ -138,12 +139,7 @@ async function ensureWhisperCliInput(filePath: string): Promise<string> {
 }
 
 async function hasCommand(command: string): Promise<boolean> {
-  try {
-    await execFileAsync("which", [command]);
-    return true;
-  } catch {
-    return false;
-  }
+  return checkCommandAvailable(command);
 }
 
 async function fileExists(filePath: string): Promise<boolean> {

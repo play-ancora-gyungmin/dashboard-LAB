@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 import { readFile, unlink } from "node:fs/promises";
 
+import { checkCommandAvailable } from "@/lib/command-availability";
+
 const TIMEOUT_MS = 5 * 60 * 1000;
 const MAX_LOG_OUTPUT = 16 * 1024;
 
@@ -66,11 +68,7 @@ export async function runCodexPrd(prompt: string, options?: { cwd?: string }): P
 }
 
 export async function checkCodexInstalled(): Promise<boolean> {
-  return new Promise((resolve) => {
-    const proc = spawn("which", ["codex"]);
-    proc.on("close", (code) => resolve(code === 0));
-    proc.on("error", () => resolve(false));
-  });
+  return checkCommandAvailable("codex");
 }
 
 function buildProcessError(label: string, code: number | null, stderr: string, stdout: string): string {

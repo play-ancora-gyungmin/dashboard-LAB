@@ -49,6 +49,7 @@ export function CsSettingsBar(props: CsSettingsBarProps) {
             { value: "claude", label: "Claude" },
             { value: "codex", label: "Codex" },
             { value: "gemini", label: "Gemini" },
+            { value: "openai", label: "OpenAI API" },
           ]}
         />
         <SelectField

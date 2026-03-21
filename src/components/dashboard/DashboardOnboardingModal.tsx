@@ -60,6 +60,7 @@ type RuntimeDraft = {
   obsidianVault: string;
   prdSaveDir: string;
   csContextsDir: string;
+  openaiApiKey: string;
 };
 
 const EMPTY_DRAFT: RuntimeDraft = {
@@ -67,6 +68,7 @@ const EMPTY_DRAFT: RuntimeDraft = {
   obsidianVault: "",
   prdSaveDir: "",
   csContextsDir: "",
+  openaiApiKey: "",
 };
 
 export function DashboardOnboardingModal({
@@ -81,6 +83,7 @@ export function DashboardOnboardingModal({
   const [saving, setSaving] = useState(false);
   const [installingTaskIds, setInstallingTaskIds] = useState<string[]>([]);
   const [installFeedback, setInstallFeedback] = useState<string | null>(null);
+  const [clearOpenAiKey, setClearOpenAiKey] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -121,7 +124,9 @@ export function DashboardOnboardingModal({
           nextSummary.settings.paths.csContextsDir ??
           nextSummary.resolvedPaths.csContextsDir.path ??
           "",
+        openaiApiKey: "",
       });
+      setClearOpenAiKey(false);
     } catch (nextError) {
       setError(
         nextError instanceof Error
@@ -201,13 +206,20 @@ export function DashboardOnboardingModal({
         },
         body: JSON.stringify({
           paths: {
-            ...draft,
+            projectsRoot: draft.projectsRoot,
+            obsidianVault: draft.obsidianVault,
+            prdSaveDir: draft.prdSaveDir,
+            csContextsDir: draft.csContextsDir,
             allowedRoots: [
               draft.projectsRoot,
               draft.obsidianVault,
               draft.prdSaveDir,
               draft.csContextsDir,
             ].filter(Boolean),
+          },
+          secrets: {
+            openaiApiKey: draft.openaiApiKey,
+            clearOpenaiApiKey: clearOpenAiKey,
           },
         }),
       });
@@ -472,6 +484,68 @@ export function DashboardOnboardingModal({
                     }))
                   }
                 />
+                <div className="rounded-2xl border border-white/8 bg-black/15 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-[0.2em] text-gray-500">
+                        OpenAI API Key
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--color-text-soft)]">
+                        Claude/Codex CLI가 없어도 CS Helper와 PRD 생성 fallback을
+                        쓰려면 키를 저장하세요. 이 값은 현재 기기 로컬 상태에만
+                        저장됩니다.
+                      </p>
+                    </div>
+                    {summary?.integrations.openaiConfigured ? (
+                      <span className="rounded-full border border-emerald-500/20 bg-emerald-950/30 px-3 py-1 text-xs text-emerald-200">
+                        저장됨
+                      </span>
+                    ) : null}
+                  </div>
+                  <input
+                    type="password"
+                    value={draft.openaiApiKey}
+                    onChange={(event) => {
+                      setDraft((current) => ({
+                        ...current,
+                        openaiApiKey: event.target.value,
+                      }));
+                      if (clearOpenAiKey) {
+                        setClearOpenAiKey(false);
+                      }
+                    }}
+                    placeholder={
+                      summary?.integrations.openaiConfigured
+                        ? "새 키로 교체하려면 입력"
+                        : "sk-..."
+                    }
+                    className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-gray-100 outline-none transition placeholder:text-gray-500 focus:border-cyan-400/40"
+                  />
+                  {summary?.integrations.openaiConfigured ? (
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <p className="text-xs text-gray-400">
+                        비워두면 기존 키를 유지합니다.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setClearOpenAiKey((current) => !current);
+                          setDraft((current) => ({
+                            ...current,
+                            openaiApiKey: "",
+                          }));
+                        }}
+                        className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                          clearOpenAiKey
+                            ? "border-rose-400/30 bg-rose-500/10 text-rose-200"
+                            : "border-white/10 bg-white/5 text-gray-300 hover:bg-white/10"
+                        }`}
+                      >
+                        {clearOpenAiKey ? "키 제거 예정" : "저장된 키 제거"}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2">

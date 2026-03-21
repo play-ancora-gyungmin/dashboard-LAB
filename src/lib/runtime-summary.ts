@@ -16,7 +16,7 @@ import {
   getRuntimeCheckRemedy,
   isDesktopRuntime,
 } from "@/lib/runtime-installer";
-import { readRuntimeSettings } from "@/lib/runtime-settings";
+import { hasOpenAiApiKey, readRuntimeSettings } from "@/lib/runtime-settings";
 import type {
   DashboardLabRuntimeCheck,
   DashboardLabRuntimePathCandidate,
@@ -72,6 +72,9 @@ export function getRuntimeSummary(): DashboardLabRuntimeSummaryResponse {
         runtimeConfig.discovery.obsidianVaultCandidates,
         runtimeConfig.paths.obsidianVault,
       ),
+    },
+    integrations: {
+      openaiConfigured: hasOpenAiApiKey(),
     },
     checks: buildDoctorChecks(runtimeConfig.paths.projectsRoot),
   };
@@ -149,6 +152,15 @@ function buildDoctorChecks(
     buildCommandCheck("claude", "Claude CLI", false),
     buildCommandCheck("codex", "Codex CLI", false),
     buildCommandCheck("gemini", "Gemini CLI", false),
+    buildStaticCheck(
+      "openai-api",
+      "OpenAI API key",
+      hasOpenAiApiKey() ? "pass" : "warn",
+      hasOpenAiApiKey()
+        ? "로컬 API fallback 사용 가능"
+        : "설정되지 않음",
+      false,
+    ),
     buildPathCheck(
       "claude-config",
       "Claude 설정",
