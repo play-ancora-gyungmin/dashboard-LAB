@@ -4,7 +4,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 import { APP_META } from "@/lib/app-meta";
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { getRuntimeConfig } from "@/lib/runtime/config";
 import type {
   CleanupAction,
   ProjectInfo,

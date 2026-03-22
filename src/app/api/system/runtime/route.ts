@@ -1,6 +1,6 @@
 import { getErrorMessage, isJsonParseError, jsonError } from "@/lib/api/error-response";
-import { getRuntimeSummary } from "@/lib/runtime-summary";
-import { updateRuntimeSecrets, updateRuntimeSettings } from "@/lib/runtime-settings";
+import { getRuntimeSummary } from "@/lib/runtime/summary";
+import { updateRuntimeSecrets, updateRuntimeSettings } from "@/lib/runtime/settings";
 import type { DashboardLabRuntimeSettingsPaths } from "@/lib/types";
 
 export const runtime = "nodejs";

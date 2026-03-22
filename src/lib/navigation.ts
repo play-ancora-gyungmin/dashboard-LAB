@@ -1,6 +1,6 @@
 "use client";
 
-import type { DashboardTabId } from "@/components/TabNav";
+import type { DashboardTabId } from "@/components/layout/TabNav";
 import { CLIENT_EVENTS, CLIENT_STORAGE_KEYS } from "@/lib/client-keys";
 
 export interface DashboardNavigationTarget {

@@ -30,7 +30,7 @@ import { resolveChangeRequestBaseline, saveGeneratedDocsBundle } from "@/lib/cal
 import { generateSupportingDocument } from "@/lib/call-to-prd/supporting-documents";
 import { buildCallWorkingContext } from "@/lib/call-to-prd/working-context";
 import { getWhisperSetupError, transcribeAudio } from "@/lib/call-to-prd/whisper-runner";
-import { hasOpenAiApiFallback } from "@/lib/openai-responses";
+import { hasOpenAiApiFallback } from "@/lib/ai/openai-responses";
 import type { CallGenerationMode, GeneratedDoc } from "@/lib/types/call-to-prd";
 
 const ALLOWED_AUDIO = [".m4a", ".mp3", ".wav", ".webm"];

@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { APP_META } from "@/lib/app-meta";
 import { summarizeLocalProject } from "@/lib/call-to-prd/project-context";
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { getRuntimeConfig } from "@/lib/runtime/config";
 import type { CsProject } from "@/lib/types";
 import { getFirstParagraph, pathExists, toPosixPath } from "@/lib/parsers/shared";
 

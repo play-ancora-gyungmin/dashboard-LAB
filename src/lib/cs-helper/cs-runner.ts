@@ -1,8 +1,8 @@
 import { checkCommandAvailable } from "@/lib/command-availability";
-import { generateOpenAiText, hasOpenAiApiFallback } from "@/lib/openai-responses";
+import { generateOpenAiText, hasOpenAiApiFallback } from "@/lib/ai/openai-responses";
 import { pathExists } from "@/lib/parsers/shared";
 import { persistJson, readPersistentJson } from "@/lib/storage/persistent-json";
-import { runSpawnTask } from "@/lib/skill-runner";
+import { runSpawnTask } from "@/lib/ai-skills/runner";
 import type {
   CsAiRunner,
   CsHistoryResponse,

@@ -11,7 +11,7 @@ import type {
   FileManagerSection,
   ScannedFile,
 } from "@/lib/types";
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { getRuntimeConfig } from "@/lib/runtime/config";
 
 import { readThroughCache } from "./cache";
 import { resolveSafePath } from "./file-safety";

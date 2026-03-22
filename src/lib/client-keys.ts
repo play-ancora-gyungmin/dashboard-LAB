@@ -3,6 +3,7 @@ import { buildEventName, buildStorageKey } from "@/lib/app-meta";
 export const CLIENT_STORAGE_KEYS = {
   homeSections: buildStorageKey("home-sections"),
   navigationTarget: buildStorageKey("nav-target"),
+  navigationMode: buildStorageKey("nav-mode-v1"),
   onboardingDismissed: buildStorageKey("onboarding-dismissed-v1"),
   pinned: buildStorageKey("pinned"),
   projectMemo: buildStorageKey("project-memo"),

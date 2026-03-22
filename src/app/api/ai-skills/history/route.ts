@@ -1,4 +1,4 @@
-import { getSkillHistory } from "@/lib/skill-runner";
+import { getSkillHistory } from "@/lib/ai-skills/runner";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

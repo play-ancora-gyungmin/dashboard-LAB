@@ -1,5 +1,5 @@
 import { jsonError } from "@/lib/api/error-response";
-import { getSkillRun } from "@/lib/skill-runner";
+import { getSkillRun } from "@/lib/ai-skills/runner";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

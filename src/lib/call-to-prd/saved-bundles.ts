@@ -21,7 +21,7 @@ import type {
   SavedCallBundleListResponse,
   SavedNextActionDraft,
 } from "@/lib/types/call-to-prd";
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { getRuntimeConfig } from "@/lib/runtime/config";
 
 interface SavedBundleManifest {
   version: 1 | 2 | 3 | 4 | 5;

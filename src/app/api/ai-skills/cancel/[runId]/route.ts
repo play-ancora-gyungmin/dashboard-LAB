@@ -1,5 +1,5 @@
 import { jsonError } from "@/lib/api/error-response";
-import { cancelSkillRun } from "@/lib/skill-runner";
+import { cancelSkillRun } from "@/lib/ai-skills/runner";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

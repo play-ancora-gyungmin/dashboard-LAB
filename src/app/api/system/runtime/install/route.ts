@@ -3,8 +3,8 @@ import {
   isJsonParseError,
   jsonError,
 } from "@/lib/api/error-response";
-import { executeRuntimeInstallTasks } from "@/lib/runtime-installer";
-import { getRuntimeSummary } from "@/lib/runtime-summary";
+import { executeRuntimeInstallTasks } from "@/lib/runtime/installer";
+import { getRuntimeSummary } from "@/lib/runtime/summary";
 import type { DashboardLabRuntimeInstallResponse } from "@/lib/types";
 
 export const runtime = "nodejs";

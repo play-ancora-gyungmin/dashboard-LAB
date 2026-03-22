@@ -1,4 +1,4 @@
-import type { DashboardTabId } from "@/components/TabNav";
+import type { DashboardTabId } from "@/components/layout/TabNav";
 
 export const DASHBOARD_TAB_ORDER: DashboardTabId[] = [
   "home",

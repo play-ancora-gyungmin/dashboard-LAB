@@ -8,7 +8,7 @@ import type {
   DocType,
   ProjectDoc,
 } from "@/lib/types";
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { getRuntimeConfig } from "@/lib/runtime/config";
 
 import { readThroughCache } from "./cache";
 import { createPreview, removeFrontmatter, resolveSafePath } from "./file-safety";

@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 
 import { checkCommandAvailable } from "@/lib/command-availability";
-import { generateOpenAiText, hasOpenAiApiFallback } from "@/lib/openai-responses";
+import { generateOpenAiText, hasOpenAiApiFallback } from "@/lib/ai/openai-responses";
 
 const TIMEOUT_MS = 5 * 60 * 1000; // 5분
 const MAX_OUTPUT = 1024 * 1024; // 1MB

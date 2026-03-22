@@ -3,7 +3,7 @@ import {
   isJsonParseError,
   jsonError,
 } from "@/lib/api/error-response";
-import { queueSkillRun } from "@/lib/skill-runner";
+import { queueSkillRun } from "@/lib/ai-skills/runner";
 import type { SkillRunRequest } from "@/lib/types";
 
 export const runtime = "nodejs";

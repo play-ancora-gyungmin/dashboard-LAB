@@ -1,7 +1,7 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { getRuntimeConfig } from "@/lib/runtime/config";
 import { normalizeWhitespace, pathExists, readUtf8 } from "@/lib/parsers/shared";
 
 interface ProjectContextSummary {

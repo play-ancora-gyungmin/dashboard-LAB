@@ -1,4 +1,4 @@
-import { getSkillTemplates } from "@/lib/skill-templates";
+import { getSkillTemplates } from "@/lib/ai-skills/templates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -11,7 +11,7 @@ import {
   GEMINI_SETTINGS_FILE,
   pathExists,
 } from "@/lib/parsers/shared";
-import { getSkillHistory } from "@/lib/skill-runner";
+import { getSkillHistory } from "@/lib/ai-skills/runner";
 import type { OverviewResponse } from "@/lib/types";
 
 const OVERVIEW_CACHE_TTL_MS = 60_000;

@@ -2,7 +2,7 @@ import path from "node:path";
 
 import type { ProjectSummary, ProjectsLiteResponse } from "@/lib/types";
 import { inspectProjectSummary, parseProjectsLite } from "@/lib/parsers/projects-parser";
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { getRuntimeConfig } from "@/lib/runtime/config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

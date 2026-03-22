@@ -7,7 +7,7 @@ import type {
   FileActionResponse,
   FileActionResult,
 } from "@/lib/types";
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { getRuntimeConfig } from "@/lib/runtime/config";
 
 import { pathExists, shellQuote, toHomePath } from "./shared";
 
