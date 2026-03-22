@@ -98,8 +98,17 @@
 
 ### macOS
 
-1. Homebrew를 한 번 설치합니다: <https://brew.sh>
-2. `Run-Dashboard-LAB.command`를 더블클릭합니다.
+대부분의 사용자는 이 경로를 권장합니다.
+
+1. [Releases](https://github.com/p-changki/dashboard-LAB/releases) 페이지를 엽니다.
+2. 최신 macOS 빌드를 내려받습니다.
+3. 내려받은 앱 패키지를 열어 실행합니다.
+
+소스 저장소 기준으로 실행하려면:
+
+1. GitHub에서 `Code -> Download ZIP`으로 저장소를 내려받거나 직접 clone 합니다.
+2. 압축을 풀고 Finder에서 해당 폴더를 엽니다.
+3. 폴더 안의 `Run-Dashboard-LAB.command`를 더블클릭합니다.
 
 CLI로 실행하려면:
 
@@ -123,14 +132,22 @@ pnpm launch
 
 macOS에서 바로 써보려면:
 
-1. Homebrew를 한 번 설치합니다.
-2. `Run-Dashboard-LAB.command`를 더블클릭합니다.
-3. 런처가 필요한 도구를 설치하고 브라우저에서 앱을 열 때까지 기다립니다.
+1. [Releases](https://github.com/p-changki/dashboard-LAB/releases) 페이지를 엽니다.
+2. 최신 macOS 빌드를 내려받습니다.
+3. 내려받은 앱 패키지를 열어 실행합니다.
+
+릴리즈 빌드가 아니라 소스 코드를 내려받은 경우:
+
+1. GitHub에서 `Code -> Download ZIP`을 누릅니다.
+2. 압축을 풉니다.
+3. 폴더를 열고 `Run-Dashboard-LAB.command`를 더블클릭합니다.
+4. 런처가 필요한 도구를 설치하고 브라우저에서 앱을 열 때까지 기다립니다.
 
 알아둘 점:
 
 - 첫 실행은 몇 분 걸릴 수 있습니다.
 - 앱이 실행되는 동안 터미널 창은 열어 두는 편이 안전합니다.
+- `Run-Dashboard-LAB.command`는 GitHub 페이지 위의 버튼이 아니라, 내려받은 저장소 폴더 안에 있는 파일입니다.
 - 중간에 멈추면 터미널 창에 실패한 단계와 다음 조치가 표시됩니다.
 - 음성 전사 도구는 선택 사항이므로, 필요할 때 나중에 설치해도 됩니다.
 

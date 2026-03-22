@@ -98,10 +98,19 @@ It is useful when you need fast, context-aware support writing without manually 
 
 ### macOS
 
-1. Install Homebrew once: <https://brew.sh>
-2. Double-click `Run-Dashboard-LAB.command`
+Recommended for most users:
 
-Or use the CLI:
+1. Open [Releases](https://github.com/p-changki/dashboard-LAB/releases)
+2. Download the latest macOS build
+3. Open the app package and run it
+
+If you are running from the source repository instead:
+
+1. Download this repository with `Code -> Download ZIP`, or clone it
+2. Open the extracted folder in Finder
+3. Double-click `Run-Dashboard-LAB.command`
+
+If you prefer the CLI:
 
 ```bash
 pnpm setup:mac
@@ -123,14 +132,22 @@ pnpm launch
 
 If you just want to try the app on macOS:
 
-1. Install Homebrew once.
-2. Double-click `Run-Dashboard-LAB.command`.
-3. Wait while the launcher installs missing tools and opens the app in your browser.
+1. Open [Releases](https://github.com/p-changki/dashboard-LAB/releases).
+2. Download the latest macOS build.
+3. Open the downloaded app package and launch it.
+
+If you downloaded the source code instead of a release build:
+
+1. Use `Code -> Download ZIP` on GitHub.
+2. Unzip the folder.
+3. Open the folder and double-click `Run-Dashboard-LAB.command`.
+4. Wait while the launcher installs missing tools and opens the app in your browser.
 
 Notes:
 
 - The first run can take several minutes.
 - Keep the terminal window open while the app is running.
+- `Run-Dashboard-LAB.command` is a file inside the downloaded repository folder, not a button on the GitHub page.
 - If setup stops early, the terminal window will show the failed step and what to install first.
 - Audio transcription tools are optional and can be added later when you actually need voice workflows.
 
