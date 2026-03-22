@@ -101,7 +101,7 @@
 대부분의 사용자는 이 경로를 권장합니다.
 
 1. [Releases](https://github.com/p-changki/dashboard-LAB/releases) 페이지를 엽니다.
-2. 최신 macOS 빌드를 내려받습니다.
+2. `dashboard-LAB-0.1.4-arm64.dmg` 또는 `dashboard-LAB-0.1.4-arm64-mac.zip` 같은 macOS 설치 파일을 내려받습니다.
 3. 내려받은 앱 패키지를 열어 실행합니다.
 
 소스 저장소 기준으로 실행하려면:
@@ -133,7 +133,7 @@ pnpm launch
 macOS에서 바로 써보려면:
 
 1. [Releases](https://github.com/p-changki/dashboard-LAB/releases) 페이지를 엽니다.
-2. 최신 macOS 빌드를 내려받습니다.
+2. `dashboard-LAB-0.1.4-arm64.dmg` 같은 macOS 설치 파일을 내려받습니다.
 3. 내려받은 앱 패키지를 열어 실행합니다.
 
 릴리즈 빌드가 아니라 소스 코드를 내려받은 경우:
@@ -147,6 +147,7 @@ macOS에서 바로 써보려면:
 
 - 첫 실행은 몇 분 걸릴 수 있습니다.
 - 앱이 실행되는 동안 터미널 창은 열어 두는 편이 안전합니다.
+- 설치본이 아니라 원본 저장소가 필요할 때만 `Source code (zip)` 또는 `Source code (tar.gz)`를 받습니다.
 - `Run-Dashboard-LAB.command`는 GitHub 페이지 위의 버튼이 아니라, 내려받은 저장소 폴더 안에 있는 파일입니다.
 - 중간에 멈추면 터미널 창에 실패한 단계와 다음 조치가 표시됩니다.
 - 음성 전사 도구는 선택 사항이므로, 필요할 때 나중에 설치해도 됩니다.

@@ -101,7 +101,7 @@ It is useful when you need fast, context-aware support writing without manually 
 Recommended for most users:
 
 1. Open [Releases](https://github.com/p-changki/dashboard-LAB/releases)
-2. Download the latest macOS build
+2. Download the latest macOS build asset such as `dashboard-LAB-0.1.4-arm64.dmg` or `dashboard-LAB-0.1.4-arm64-mac.zip`
 3. Open the app package and run it
 
 If you are running from the source repository instead:
@@ -133,7 +133,7 @@ pnpm launch
 If you just want to try the app on macOS:
 
 1. Open [Releases](https://github.com/p-changki/dashboard-LAB/releases).
-2. Download the latest macOS build.
+2. Download a macOS build asset such as `dashboard-LAB-0.1.4-arm64.dmg`.
 3. Open the downloaded app package and launch it.
 
 If you downloaded the source code instead of a release build:
@@ -147,6 +147,7 @@ Notes:
 
 - The first run can take several minutes.
 - Keep the terminal window open while the app is running.
+- Do not download `Source code (zip)` or `Source code (tar.gz)` unless you want the raw repository instead of an installable app.
 - `Run-Dashboard-LAB.command` is a file inside the downloaded repository folder, not a button on the GitHub page.
 - If setup stops early, the terminal window will show the failed step and what to install first.
 - Audio transcription tools are optional and can be added later when you actually need voice workflows.
