@@ -1,10 +1,7 @@
-import { mkdirSync, readFileSync } from "node:fs";
-import { rename, writeFile } from "node:fs/promises";
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { readRuntimeSettings } from "@/lib/runtime/settings";
-
-const writeQueue = new Map<string, Promise<void>>();
 
 export function readPersistentJson<T>(fileName: string, fallback: T): T {
   try {
@@ -28,20 +25,14 @@ export function persistJson(fileName: string, data: unknown): void {
   const filePath = getPrimaryStateFilePath(fileName);
   const tempPath = `${filePath}.tmp`;
   const serialized = JSON.stringify(data, null, 2);
-  mkdirSync(path.dirname(filePath), { recursive: true });
-  const previous = writeQueue.get(filePath) ?? Promise.resolve();
 
-  const next = previous
-    .catch(() => undefined)
-    .then(async () => {
-      await writeFile(tempPath, serialized, "utf-8");
-      await rename(tempPath, filePath);
-    })
-    .catch((error) => {
-      console.error(`Failed to persist state: ${fileName}`, error);
-    });
-
-  writeQueue.set(filePath, next);
+  try {
+    mkdirSync(path.dirname(filePath), { recursive: true });
+    writeFileSync(tempPath, serialized, "utf-8");
+    renameSync(tempPath, filePath);
+  } catch (error) {
+    console.error(`Failed to persist state: ${fileName}`, error);
+  }
 }
 
 function getPrimaryStateFilePath(fileName: string) {
