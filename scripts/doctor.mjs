@@ -29,15 +29,15 @@ const checks = [
   },
   {
     label: "ffmpeg",
-    required: true,
+    required: false,
     test: () => hasCommand("ffmpeg"),
-    fix: getFfmpegFix(),
+    fix: `${getFfmpegFix()} (음성 파일 전사가 필요할 때만)`,
   },
   {
     label: "whisper backend",
-    required: true,
+    required: false,
     test: () => hasCommand("whisper") || hasCommand("whisper-cli"),
-    fix: getWhisperFix(),
+    fix: `${getWhisperFix()} (음성 전사 기능을 쓸 때만)`,
   },
   {
     label: "node_modules",
@@ -47,9 +47,9 @@ const checks = [
   },
   {
     label: "Whisper model",
-    required: true,
+    required: false,
     test: () => fileExists(path.join(repoRoot, "models", "ggml-base.bin")),
-    fix: "curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin -o models/ggml-base.bin",
+    fix: "curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin -o models/ggml-base.bin (whisper-cpp 기반 음성 전사 기능을 쓸 때만)",
   },
   {
     label: "Claude or Codex CLI",

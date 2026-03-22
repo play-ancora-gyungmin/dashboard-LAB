@@ -1,47 +1,88 @@
 # dashboard-LAB
 
-Local-first AI workbench for turning call recordings into practical product documents.
+English | [한국어](README.ko.md)
 
-Boilerplate transition docs:
-- `docs/DASHBOARD_LAB_BLUEPRINT.md`
-- `docs/DASHBOARD_LAB_MIGRATION_PLAN.md`
+`dashboard-LAB` is a local-first AI workspace for people who want to use their own AI CLI tools to manage projects, documents, and everyday computer workflows from one dashboard.
 
-Core flow:
-- record a client call
-- transcribe it locally with Whisper
-- generate PRD and support docs
-- keep the workflow on your machine
-- connect your own folders during first-run onboarding
+Use it to bring `claude`, `codex`, and similar local tools into a guided workspace that is easier to operate than a terminal-first setup.
 
-Current stack:
+## Why It Exists
+
+- Use local AI tools through a practical UI instead of juggling terminal commands all day.
+- Help non-developers work through developer-style flows with project context, system visibility, and reusable helpers.
+- Keep project management, document work, customer communication, file cleanup, and system actions in one place.
+- Read daily refreshed news, trends, dependency updates, and security signals without leaving the workspace.
+- Treat recording and transcription as optional workflows, not as the product's main identity.
+
+## Who It Is For
+
+- Founders, operators, PMs, and non-developers who want developer-style leverage from local AI tools
+- Developers who want one workspace for project scanning, doc lookup, AI skills, and system helpers
+- Anyone who already uses `claude`, `codex`, or similar local tooling and wants a more usable interface around it
+
+## What You Can Do
+
+- `Home`: check CLI tool status, agents, skills, MCP connections, and quick commands
+- `AI Skills`: run reusable AI workflows and keep a history of outputs
+- `CS Helper`: turn project context plus incoming customer messages into reply drafts, internal notes, and support-ready response text
+- `Projects`: inspect local repositories, git status, ports, env hints, and cleanup targets
+- `Doc Hub`: browse project docs such as `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, and `docs/*.md`
+- `File Manager`: review cleanup suggestions for Desktop and Downloads
+- `System`: inspect local machine status, processes, runtime info, and app launch actions
+- `Info Hub`: read daily refreshed news, trends, package updates, and security checks
+- `Call to PRD`: turn notes, transcripts, or meeting context into PRDs and working docs
+
+By default, the app starts in a simpler navigation mode and keeps more operational tabs out of the way until you switch to the full view.
+
+## CS Helper
+
+`CS Helper` is for customer communication work, not just generic text generation.
+
+You select a project, bring in the relevant context, paste a customer message or issue summary, and generate:
+
+- customer reply drafts
+- internal analysis notes
+- project-aware response options
+- regenerated variants when you want a different tone or framing
+
+It is useful when you need fast, context-aware support writing without manually reconstructing project background every time.
+
+## Core Strengths
+
+- Local AI workspace built around your own CLI tools
+- Project and document visibility across your machine
+- PRD and work-doc generation from real project context
+- Daily information flow for news, trends, dependency updates, and security checks
+- A guided UI that makes advanced local workflows more usable for non-developers
+
+## Stack
+
 - Next.js 15
-- Electron desktop shell
+- React 19
+- Electron 35
+- local `ffmpeg`
 - local `whisper` or `whisper-cli`
-- `ffmpeg`
-- `claude` and/or `codex` CLI for document generation
+- local `claude` and/or `codex` CLI
 - optional OpenAI API fallback for `CS Helper` and `Call to PRD`
 
-## Who This Is For
+## Positioning
 
-- solo founders collecting product requests from calls
-- agencies writing delivery docs from client conversations
-- PMs or operators who want local, privacy-first meeting-to-PRD workflows
+`dashboard-LAB` is a local AI workspace and operational dashboard first.
 
-## Quick Start For macOS
+It is not a recording-first product.
 
-The easiest path for non-developers is:
+The main value is combining local AI, project context, system visibility, and daily information flows in one environment.
 
-1. Install Homebrew once: https://brew.sh
+Audio capture, transcription, and `Call to PRD` are secondary workflows alongside project scanning, document browsing, AI skills, file cleanup, system tooling, and daily updates.
+
+## Quick Start
+
+### macOS
+
+1. Install Homebrew once: <https://brew.sh>
 2. Double-click `Run-Dashboard-LAB.command`
 
-What the launcher does:
-- installs `node`, `ffmpeg`, `whisper-cpp` if missing
-- installs JavaScript dependencies with `pnpm`
-- downloads `models/ggml-base.bin` if missing
-- starts the local app
-- opens the browser automatically
-
-## CLI Setup
+Or use the CLI:
 
 ```bash
 pnpm setup:mac
@@ -49,9 +90,9 @@ pnpm doctor
 pnpm launch
 ```
 
-## CLI Setup For Windows / Linux
+### Windows / Linux
 
-Windows and Linux are now supported as experimental desktop targets.
+Windows and Linux desktop targets are currently experimental.
 
 ```bash
 pnpm install
@@ -59,164 +100,102 @@ pnpm doctor
 pnpm launch
 ```
 
-What you still need to install yourself:
+## For Non-Developers
+
+If you just want to try the app on macOS:
+
+1. Install Homebrew once.
+2. Double-click `Run-Dashboard-LAB.command`.
+3. Wait while the launcher installs missing tools and opens the app in your browser.
+
+Notes:
+
+- The first run can take several minutes.
+- Keep the terminal window open while the app is running.
+- If setup stops early, the terminal window will show the failed step and what to install first.
+- Audio transcription tools are optional and can be added later when you actually need voice workflows.
+
+## Requirements
+
+Core:
+
 - Node.js 22+
 - `pnpm`
+- `claude` CLI or `codex` CLI for the best local generation experience
+- optional OpenAI API key for fallback generation
+
+Optional for audio workflows:
+
 - `ffmpeg`
 - `whisper` or `whisper-cli`
 - `models/ggml-base.bin`
-- optional: an OpenAI API key if you want AI generation without local CLI tools
 
-## Desktop App
+## Desktop Builds
 
-Electron development mode:
+Development:
 
 ```bash
 pnpm assets:icon
 pnpm desktop:dev
 ```
 
-Desktop build output:
+Local packaged build:
 
 ```bash
 pnpm assets:icon
 pnpm desktop:build
 ```
 
-macOS desktop artifacts:
+Platform distributions:
 
 ```bash
 pnpm assets:icon
 pnpm desktop:dist:mac
-```
-
-Windows desktop artifacts:
-
-```bash
-pnpm assets:icon
 pnpm desktop:dist:win
-```
-
-Linux desktop artifacts:
-
-```bash
-pnpm assets:icon
 pnpm desktop:dist:linux
 ```
 
-GitHub release from the current version tag:
+## Development
 
 ```bash
-git tag v0.1.5
-git push origin v0.1.5
+pnpm dev
+pnpm lint
+pnpm type-check
+pnpm build
 ```
 
-That tag triggers the release workflow and uploads macOS, Windows, and Linux artifacts to GitHub Releases.
-
-Detailed notes:
-- `docs/ELECTRON_DESKTOP_PLAN.md`
-- `docs/DEPLOYMENT_READINESS.md`
-- `docs/V0_1_5_CHECKLIST.md`
-- `CONTRIBUTING.md`
-- `SECURITY.md`
-
-On first launch, the dashboard inspects your local environment and lets you confirm:
-- project root
-- PRD output directory
-- CS context directory
-
-## Requirements
-
-Required:
-- Node.js
-- `ffmpeg`
-- `whisper` or `whisper-cli`
-- `models/ggml-base.bin`
-
-Needed for AI document generation:
-- `claude` CLI or `codex` CLI
-
-Optional fallback:
-- OpenAI API key saved during onboarding
-- this enables `CS Helper` and `Call to PRD` even when local AI CLIs are missing
-
-Notes:
-- speech-to-text runs locally
-- `whisper-cpp` needs a ggml model file
-- `m4a` and `webm` inputs are converted through `ffmpeg` before transcription
-
-## Doctor
-
-Use the local environment checker before reporting issues:
-
-```bash
-pnpm doctor
-```
-
-It verifies:
-- system prerequisites
-- installed CLI tools
-- local model presence
-- dependency install status
-
-If `pnpm install` reports ignored build scripts for packages like `node-pty` or `sharp`, run:
+If `pnpm install` reports ignored native build scripts, run:
 
 ```bash
 pnpm approve-builds
 pnpm rebuild electron node-pty
 ```
 
-Then allow the packages you want to use locally.
+## Troubleshooting
 
-## Current Product Surface
+- `Homebrew is required`: install Homebrew from <https://brew.sh> and run the launcher again.
+- `ffmpeg` missing: only needed for audio conversion. Run `brew install ffmpeg` on macOS if you want voice workflows.
+- `whisper` or `whisper-cli` missing: only needed for transcription. Run `brew install whisper-cpp` on macOS if you want voice workflows.
+- Browser did not open automatically: run `pnpm launch` and open the local URL shown in the terminal.
+- PRD generation is unavailable: make sure `claude` or `codex` CLI is installed, or save an OpenAI API key during onboarding.
 
-- `Call to PRD`: call recording -> transcript -> PRD + support docs
-- `AI Skills`: reusable AI workflows
-- `Terminal`: local terminal sessions inside the dashboard
-- `Projects`, `Doc Hub`, `Info Hub`, `System`, `CS Helper`
+## Project Files
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [SECURITY.md](SECURITY.md)
+- [LICENSE](LICENSE)
+
+## Release Status
+
+- macOS: best current path for public testing
+- Windows: experimental
+- Linux: experimental
+- zero-config onboarding for every dependency path: not finished
 
 ## Privacy
 
-This app is designed for local use.
+Do not commit customer recordings, transcripts, generated private documents, local state files, or API keys.
 
-Before sharing the repository publicly, do not include:
-- customer recordings
-- transcripts
-- generated documents with client information
-- local state files
-- API keys or `.env` files
+## License
 
-## Development
-
-```bash
-pnpm dev
-pnpm assets:icon
-pnpm desktop:dev
-pnpm type-check
-pnpm lint
-```
-
-## Open Source Notes
-
-- The desktop app is stable on macOS and experimental on Windows/Linux.
-- Release artifacts are built locally into `release/`.
-- This repository uses the MIT license.
-
-## Current Readiness
-
-- macOS: recommended path for real users today
-- Windows: usable, but still needs installer smoke testing on a clean machine
-- Linux: usable, but still needs installer smoke testing on a clean machine
-- fully zero-config onboarding for every user: not finished yet
-
-The current product works best when one of these is true:
-- local `claude` or `codex` CLI is already available
-- or an OpenAI API key is saved during onboarding for fallback generation
-
-If you test the Windows or Linux release on a clean machine, please file the included desktop smoke test issue template so support can be upgraded from experimental to verified.
-
-The local runner prints a dynamic app URL and terminal WebSocket port:
-
-```bash
-pnpm launch
-```
+MIT
