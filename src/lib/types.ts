@@ -6,6 +6,7 @@ export * from "./types/file-manager";
 export * from "./types/info-hub";
 export * from "./types/meeting-hub";
 export * from "./types/projects-extended";
+export * from "./types/signal-writer";
 export * from "./types/system";
 export * from "./types/terminal";
 export * from "./types/ux";

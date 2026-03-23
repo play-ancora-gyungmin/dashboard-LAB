@@ -91,6 +91,14 @@ const InfoHubTab = dynamic(
   },
 );
 
+const SignalWriterTab = dynamic(
+  () => import("@/features/signal-writer/SignalWriterTab").then((module) => module.SignalWriterTab),
+  {
+    ssr: false,
+    loading: () => <TabPanelMessage title="Signal Writer" message="탭을 불러오는 중입니다." />,
+  },
+);
+
 const CallToPrdTab = dynamic(
   () => import("@/features/call-to-prd/CallToPrdTab").then((module) => module.CallToPrdTab),
   {
@@ -128,6 +136,7 @@ export function Dashboard({ data }: DashboardProps) {
       meetinghub: "Meeting Hub",
       filemanager: "File Manager",
       system: "System",
+      signalwriter: "Signal Writer",
       loadOverviewFailed: "Failed to load the home overview.",
       guide: "Guide",
       refresh: "Refresh",
@@ -287,6 +296,7 @@ export function Dashboard({ data }: DashboardProps) {
               {activeTab === "filemanager" ? <FileManagerTab /> : null}
               {activeTab === "system" ? <SystemTab /> : null}
               {activeTab === "infohub" ? <InfoHubTab mode={navigationMode} /> : null}
+              {activeTab === "signalwriter" ? <SignalWriterTab mode={navigationMode} /> : null}
               {activeTab === "calltoprd" ? <CallToPrdTab mode={navigationMode} /> : null}
             </section>
           </div>

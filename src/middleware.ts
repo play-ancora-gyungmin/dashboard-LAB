@@ -4,6 +4,7 @@ const PROTECTED_LOCALHOST_PATHS = [
   "/api/system/",
   "/api/projects/env-map",
   "/api/meeting-hub/",
+  "/api/signal-writer/",
 ];
 
 const PROTECTED_POST_PATHS = [

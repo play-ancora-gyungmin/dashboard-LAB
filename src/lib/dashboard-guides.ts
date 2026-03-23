@@ -11,6 +11,7 @@ export const DASHBOARD_TAB_ORDER: DashboardTabId[] = [
   "filemanager",
   "system",
   "infohub",
+  "signalwriter",
   "calltoprd",
 ];
 
@@ -63,6 +64,10 @@ const LOCALIZED_TAB_META: Record<AppLocale, Record<DashboardTabId, DashboardTabM
       title: "Info Hub",
       description: "개발 뉴스, 트렌딩 저장소, 패키지 업데이트와 보안 알림을 모아 봅니다.",
     },
+    signalwriter: {
+      title: "Signal Writer",
+      description: "오늘 기사에서 Threads용 초안을 바로 만드는 글쓰기 탭입니다.",
+    },
     calltoprd: {
       title: "Call → PRD",
       description: "고객 불만, 회의 메모, 통화 기록을 분석하여 PRD와 실무 문서를 자동 생성합니다.",
@@ -104,6 +109,10 @@ const LOCALIZED_TAB_META: Record<AppLocale, Record<DashboardTabId, DashboardTabM
     infohub: {
       title: "Info Hub",
       description: "Follow dev news, trending repos, package updates, and security signals.",
+    },
+    signalwriter: {
+      title: "Signal Writer",
+      description: "Turn today's signals into Threads-ready drafts from one writing flow.",
     },
     calltoprd: {
       title: "Call → PRD",
@@ -338,6 +347,31 @@ const LOCALIZED_GUIDES: Record<AppLocale, Record<DashboardTabId, DashboardGuide>
       caution: [
         "실시간 뉴스 피드보다 일일 브리핑 성격이 강합니다.",
         "캐시를 쓰므로 매 클릭마다 최신 데이터를 다시 받아오지는 않습니다.",
+      ],
+    },
+    signalwriter: {
+      badge: "소셜 초안 작성",
+      summary:
+        "오늘 의미 있는 기사 4~5개를 추려서, 선택한 신호 하나를 Threads용 초안으로 바꾸는 글쓰기 탭입니다.",
+      features: [
+        "Info Hub 피드에서 지금 글로 풀기 좋은 신호만 카드 형태로 먼저 추립니다.",
+        "카드를 하나 선택하면 훅, 짧은 본문, 쓰레드 버전, 해시태그를 한 번에 생성합니다.",
+        "생성 중에는 어떤 단계로 초안을 만들고 있는지 진행 상태를 보여줍니다.",
+        "완성된 결과를 바로 복사하고 로컬 파일로 저장해 이후 이력을 남길 수 있습니다.",
+      ],
+      quickSteps: [
+        "첫 화면에서 오늘 쓸 만한 기사 카드를 1개 고릅니다.",
+        "생성 버튼을 눌러 초안 작성 단계를 진행합니다.",
+        "완료된 짧은 글이나 쓰레드 버전을 복사해서 소셜에 올립니다.",
+      ],
+      useWhen: [
+        "매일 최신 기술 뉴스를 바탕으로 짧은 관점 글을 올리고 싶을 때",
+        "Info Hub에서 본 내용을 바로 소셜 글감으로 연결하고 싶을 때",
+        "자동 게시 대신 사람이 검수 가능한 초안 생성 흐름이 필요할 때",
+      ],
+      caution: [
+        "초기 버전은 자동 게시가 아니라 초안 생성과 복사 중심입니다.",
+        "계정 톤과 사실관계는 게시 전에 한 번 더 검토하는 편이 안전합니다.",
       ],
     },
     calltoprd: {
@@ -592,6 +626,31 @@ const LOCALIZED_GUIDES: Record<AppLocale, Record<DashboardTabId, DashboardGuide>
       caution: [
         "It behaves more like a daily briefing than a real-time news feed.",
         "Because caching is used, every click does not fetch brand-new data.",
+      ],
+    },
+    signalwriter: {
+      badge: "Social draft writing",
+      summary:
+        "A writing tab that picks 4-5 meaningful stories for today, then turns one selected signal into a Threads-ready draft.",
+      features: [
+        "Start from curated signal cards rather than raw feed noise.",
+        "Generate a hook, short post, thread version, and hashtags from one chosen card.",
+        "See staged progress instead of a blank loading state while the draft is being prepared.",
+        "Copy the final result and keep a local file record of the generated draft.",
+      ],
+      quickSteps: [
+        "Choose one of the daily signal cards.",
+        "Press generate and wait for the staged writing flow to finish.",
+        "Copy either the short post or the thread version.",
+      ],
+      useWhen: [
+        "You want to post timely takes about dev and AI news without starting from a blank page.",
+        "You want to move directly from Info Hub signals into a social draft.",
+        "You want draft generation with manual approval instead of blind auto-posting.",
+      ],
+      caution: [
+        "The first release focuses on draft generation and copy, not direct publishing.",
+        "You should still review the tone and factual framing before posting publicly.",
       ],
     },
     calltoprd: {

@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Monitor,
   NotebookPen,
+  PenLine,
   Phone,
   Rss,
   SlidersHorizontal,
@@ -30,6 +31,7 @@ const TABS = [
   { id: "filemanager", icon: FolderCog, tier: "advanced" },
   { id: "system", icon: Monitor, tier: "advanced" },
   { id: "infohub", icon: Rss, tier: "core" },
+  { id: "signalwriter", icon: PenLine, tier: "core" },
   { id: "calltoprd", icon: Phone, tier: "core" },
 ] as const;
 
