@@ -45,6 +45,45 @@ export function getSignalWriterCopy(locale: AppLocale) {
           description: "저장/공유를 부르는 훅과 관점을 우선합니다.",
         },
       },
+      recommendation: {
+        title: "추천 생성 기준",
+        apply: "추천값 적용",
+        mode: "추천 모드",
+        runner: "추천 러너",
+        criteria: "추천 기준",
+      },
+      runners: {
+        title: "AI 생성기 선택",
+        description: "직접 원하는 AI를 고르거나, 자동 선택으로 가장 적합한 러너를 쓰게 할 수 있습니다.",
+        auto: {
+          label: "자동 선택",
+          description: "사용 가능한 AI 중 가장 적합한 러너를 고릅니다.",
+        },
+        claude: {
+          label: "Claude",
+          description: "훅과 관점형 글에 강합니다.",
+        },
+        codex: {
+          label: "Codex",
+          description: "구조화와 실무형 정리에 강합니다.",
+        },
+        gemini: {
+          label: "Gemini",
+          description: "빠른 요약과 짧은 초안에 잘 맞습니다.",
+        },
+        openai: {
+          label: "OpenAI",
+          description: "API key가 있을 때 쓰는 클라우드 fallback입니다.",
+        },
+        template: {
+          label: "템플릿",
+          description: "AI 없이 규칙 기반 초안을 만듭니다.",
+        },
+        available: "사용 가능",
+        unavailable: "준비 필요",
+        selected: "선택됨",
+        recommended: "추천",
+      },
       cta: {
         choose: "이 카드 선택",
         generate: "선택한 기사로 초안 생성",
@@ -68,6 +107,7 @@ export function getSignalWriterCopy(locale: AppLocale) {
       result: {
         title: "생성된 초안",
         mode: "생성 모드",
+        runner: "생성 러너",
         angle: "글 각도",
         targetAudience: "이 글이 맞는 독자",
         hook: "훅",
@@ -94,8 +134,13 @@ export function getSignalWriterCopy(locale: AppLocale) {
         downloadCover: "커버 다운로드",
         noSourceImage: "이 시그널에는 바로 쓸 수 있는 원문 이미지가 없습니다.",
         saved: "로컬 저장 경로",
-        sourceModelOpenAi: "OpenAI 생성",
-        sourceModelTemplate: "템플릿 생성",
+        sourceModels: {
+          claude: "Claude 생성",
+          codex: "Codex 생성",
+          gemini: "Gemini 생성",
+          openai: "OpenAI 생성",
+          template: "템플릿 생성",
+        },
         copyShort: "짧은 글 복사",
         copyThread: "쓰레드 복사",
         copyHook: "훅 복사",
@@ -143,6 +188,45 @@ export function getSignalWriterCopy(locale: AppLocale) {
           description: "Optimize for hook strength and shareability.",
         },
       },
+      recommendation: {
+        title: "Recommended setup",
+        apply: "Use recommendation",
+        mode: "Recommended mode",
+        runner: "Recommended runner",
+        criteria: "Why this setup",
+      },
+      runners: {
+        title: "AI runner",
+        description: "Pick a specific AI writer, or let the app choose the best available runner automatically.",
+        auto: {
+          label: "Auto",
+          description: "Choose the best available runner for this draft.",
+        },
+        claude: {
+          label: "Claude",
+          description: "Best for hooks and stronger point of view.",
+        },
+        codex: {
+          label: "Codex",
+          description: "Best for structured, practical drafts.",
+        },
+        gemini: {
+          label: "Gemini",
+          description: "Best for fast summaries and concise first drafts.",
+        },
+        openai: {
+          label: "OpenAI",
+          description: "Cloud fallback when the API key is configured.",
+        },
+        template: {
+          label: "Template",
+          description: "Rule-based fallback without AI.",
+        },
+        available: "Available",
+        unavailable: "Needs setup",
+        selected: "Selected",
+        recommended: "Recommended",
+      },
       cta: {
         choose: "Choose this card",
         generate: "Generate draft from selected signal",
@@ -166,6 +250,7 @@ export function getSignalWriterCopy(locale: AppLocale) {
       result: {
         title: "Generated draft",
         mode: "Draft mode",
+        runner: "AI runner",
         angle: "Post angle",
         targetAudience: "Best audience",
         hook: "Hook",
@@ -192,8 +277,13 @@ export function getSignalWriterCopy(locale: AppLocale) {
         downloadCover: "Download cover",
         noSourceImage: "This signal does not expose a usable source image.",
         saved: "Saved locally",
-        sourceModelOpenAi: "Generated with OpenAI",
-        sourceModelTemplate: "Generated with template fallback",
+        sourceModels: {
+          claude: "Generated with Claude",
+          codex: "Generated with Codex",
+          gemini: "Generated with Gemini",
+          openai: "Generated with OpenAI",
+          template: "Generated with template fallback",
+        },
         copyShort: "Copy short post",
         copyThread: "Copy thread",
         copyHook: "Copy hook",

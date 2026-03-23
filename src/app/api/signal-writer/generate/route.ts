@@ -13,6 +13,7 @@ export async function POST(request: Request) {
     const payload = (await request.json()) as Partial<SignalWriterGenerateRequest>;
     const signal = payload.signal;
     const mode = normalizeMode(payload.mode);
+    const runner = normalizeRunner(payload.runner);
 
     if (
       !signal ||
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const draft = await generateSignalWriterDraft(signal, locale, mode);
+    const draft = await generateSignalWriterDraft(signal, locale, mode, runner);
     const artifacts = persistSignalWriterDraft(signal, draft);
 
     const response: SignalWriterGenerateResponse = {
@@ -68,5 +69,18 @@ function normalizeMode(value: SignalWriterGenerateRequest["mode"]) {
       return value;
     default:
       return "viral";
+  }
+}
+
+function normalizeRunner(value: SignalWriterGenerateRequest["runner"]) {
+  switch (value) {
+    case "claude":
+    case "codex":
+    case "gemini":
+    case "openai":
+    case "template":
+      return value;
+    default:
+      return "auto";
   }
 }

@@ -17,7 +17,14 @@ import { useLocale } from "@/components/layout/LocaleProvider";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { ErrorCard } from "@/components/ui/ErrorCard";
 import { getSignalWriterCopy } from "@/features/signal-writer/copy";
+import {
+  getDefaultSignalWriterRunnerAvailability,
+  recommendSignalWriterSetup,
+  type SignalWriterRunnerAvailability,
+} from "@/features/signal-writer/recommendations";
 import type {
+  DashboardLabRuntimeSummaryResponse,
+  SignalWriterAiRunner,
   SignalWriterDraft,
   SignalWriterDraftMode,
   SignalWriterGenerateResponse,
@@ -35,6 +42,10 @@ export function SignalWriterTab({ mode = "core" }: { mode?: DashboardNavigationM
   const [signals, setSignals] = useState<SignalWriterSignal[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedMode, setSelectedMode] = useState<SignalWriterDraftMode>("viral");
+  const [selectedRunner, setSelectedRunner] = useState<SignalWriterAiRunner>("auto");
+  const [runnerAvailability, setRunnerAvailability] = useState<SignalWriterRunnerAvailability>(
+    getDefaultSignalWriterRunnerAvailability(),
+  );
   const [draft, setDraft] = useState<SignalWriterDraft | null>(null);
   const [step, setStep] = useState<SignalWriterStep>("select");
   const [loading, setLoading] = useState(true);
@@ -47,9 +58,20 @@ export function SignalWriterTab({ mode = "core" }: { mode?: DashboardNavigationM
     () => signals.find((item) => item.id === selectedId) ?? null,
     [signals, selectedId],
   );
+  const recommendation = useMemo(
+    () =>
+      selectedSignal
+        ? recommendSignalWriterSetup(selectedSignal, locale, runnerAvailability)
+        : null,
+    [locale, runnerAvailability, selectedSignal],
+  );
 
   useEffect(() => {
     void loadSignals(locale, setSignals, setSelectedId, setLoading, setError, false);
+  }, [locale]);
+
+  useEffect(() => {
+    void loadRunnerAvailability(locale, setRunnerAvailability);
   }, [locale]);
 
   useEffect(() => {
@@ -92,7 +114,11 @@ export function SignalWriterTab({ mode = "core" }: { mode?: DashboardNavigationM
           "Content-Type": "application/json",
           "x-dashboard-locale": locale,
         },
-        body: JSON.stringify({ signal: selectedSignal, mode: selectedMode }),
+        body: JSON.stringify({
+          signal: selectedSignal,
+          mode: selectedMode,
+          runner: selectedRunner,
+        }),
       });
 
       const payload = (await response.json()) as Partial<SignalWriterGenerateResponse> & {
@@ -260,6 +286,61 @@ export function SignalWriterTab({ mode = "core" }: { mode?: DashboardNavigationM
           )}
 
           <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+            {recommendation ? (
+              <div className="mb-5 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-white">{copy.recommendation.title}</p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--color-text-soft)]">
+                        {recommendation.reason}
+                      </p>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-2xl border border-white/8 bg-black/15 px-4 py-3">
+                        <p className="text-[11px] uppercase tracking-[0.2em] text-gray-500">
+                          {copy.recommendation.mode}
+                        </p>
+                        <p className="mt-2 text-sm font-medium text-amber-100">
+                          {copy.modes[recommendation.mode].label}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/8 bg-black/15 px-4 py-3">
+                        <p className="text-[11px] uppercase tracking-[0.2em] text-gray-500">
+                          {copy.recommendation.runner}
+                        </p>
+                        <p className="mt-2 text-sm font-medium text-amber-100">
+                          {copy.runners[recommendation.runner].label}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-gray-500">
+                        {copy.recommendation.criteria}
+                      </p>
+                      <ul className="mt-2 space-y-2">
+                        {recommendation.criteria.map((item) => (
+                          <li key={item} className="text-sm leading-6 text-white/85">
+                            - {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedMode(recommendation.mode);
+                      setSelectedRunner(recommendation.runner);
+                    }}
+                    className="inline-flex items-center justify-center rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-sm text-amber-100 transition hover:bg-amber-400/15"
+                  >
+                    {copy.recommendation.apply}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             <p className="text-sm font-medium text-white">{copy.modes.title}</p>
             <p className="mt-2 text-sm leading-6 text-[var(--color-text-soft)]">
               {copy.modes.description}
@@ -288,9 +369,64 @@ export function SignalWriterTab({ mode = "core" }: { mode?: DashboardNavigationM
                         active ? "text-sm font-medium text-amber-100" : "text-sm font-medium text-white"
                       }
                     >
-                      {modeCopy.label}
+                      <span>{modeCopy.label}</span>
                     </p>
+                    {recommendation?.mode === modeKey ? (
+                      <span className="mt-2 inline-flex rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-[11px] text-amber-100">
+                        {copy.runners.recommended}
+                      </span>
+                    ) : null}
                     <p className="mt-2 text-xs leading-5 text-gray-400">{modeCopy.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+            <p className="text-sm font-medium text-white">{copy.runners.title}</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--color-text-soft)]">
+              {copy.runners.description}
+            </p>
+            <div className="mt-4 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+              {(
+                ["auto", "claude", "codex", "gemini", "openai", "template"] as SignalWriterAiRunner[]
+              ).map((runnerKey) => {
+                const active = selectedRunner === runnerKey;
+                const runnerCopy = copy.runners[runnerKey];
+                const available = runnerAvailability[runnerKey];
+
+                return (
+                  <button
+                    key={runnerKey}
+                    type="button"
+                    onClick={() => setSelectedRunner(runnerKey)}
+                    className={[
+                      "rounded-2xl border p-4 text-left transition",
+                      active
+                        ? "border-amber-400/30 bg-amber-400/10"
+                        : "border-white/10 bg-black/15 hover:bg-white/[0.04]",
+                    ].join(" ")}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className={active ? "text-sm font-medium text-amber-100" : "text-sm font-medium text-white"}>
+                        {runnerCopy.label}
+                      </p>
+                      {recommendation?.runner === runnerKey ? (
+                        <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-[11px] text-amber-100">
+                          {copy.runners.recommended}
+                        </span>
+                      ) : null}
+                      {active ? (
+                        <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white">
+                          {copy.runners.selected}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 text-xs leading-5 text-gray-400">{runnerCopy.description}</p>
+                    <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-gray-500">
+                      {available ? copy.runners.available : copy.runners.unavailable}
+                    </p>
                   </button>
                 );
               })}
@@ -316,6 +452,16 @@ export function SignalWriterTab({ mode = "core" }: { mode?: DashboardNavigationM
           <p className="text-xs uppercase tracking-[0.24em] text-amber-200/80">{copy.generate.title}</p>
           <h3 className="mt-3 text-xl font-semibold text-white">{selectedSignal.title}</h3>
           <p className="mt-3 text-sm leading-6 text-[var(--color-text-soft)]">{copy.generate.description}</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/8 bg-black/15 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-gray-500">{copy.result.mode}</p>
+              <p className="mt-2 text-sm font-medium text-white">{copy.modes[selectedMode].label}</p>
+            </div>
+            <div className="rounded-2xl border border-white/8 bg-black/15 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-gray-500">{copy.result.runner}</p>
+              <p className="mt-2 text-sm font-medium text-white">{copy.runners[selectedRunner].label}</p>
+            </div>
+          </div>
 
           <div className="mt-6 space-y-3">
             {copy.generate.stages.map((stage, index) => {
@@ -360,7 +506,9 @@ export function SignalWriterTab({ mode = "core" }: { mode?: DashboardNavigationM
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.24em] text-amber-200/80">{copy.result.title}</p>
               <h3 className="text-xl font-semibold text-white">{selectedSignal.title}</h3>
-              <p className="text-sm text-[var(--color-text-soft)]">{draft.sourceModel === "openai" ? copy.result.sourceModelOpenAi : copy.result.sourceModelTemplate}</p>
+              <p className="text-sm text-[var(--color-text-soft)]">
+                {copy.result.sourceModels[draft.sourceModel]}
+              </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
@@ -380,11 +528,20 @@ export function SignalWriterTab({ mode = "core" }: { mode?: DashboardNavigationM
             </div>
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-3">
+          <div className="grid gap-5 lg:grid-cols-4">
             <ResultBlock title={copy.result.mode}>
               <p className="text-sm font-medium text-white/90">{copy.modes[draft.mode].label}</p>
               <p className="mt-2 text-xs leading-5 text-gray-400">
                 {copy.modes[draft.mode].description}
+              </p>
+            </ResultBlock>
+
+            <ResultBlock title={copy.result.runner}>
+              <p className="text-sm font-medium text-white/90">
+                {copy.result.sourceModels[draft.sourceModel]}
+              </p>
+              <p className="mt-2 text-xs leading-5 text-gray-400">
+                {copy.runners[draft.sourceModel].description}
               </p>
             </ResultBlock>
 
@@ -588,6 +745,38 @@ export function SignalWriterTab({ mode = "core" }: { mode?: DashboardNavigationM
       ) : null}
     </section>
   );
+}
+
+async function loadRunnerAvailability(
+  locale: "ko" | "en",
+  setRunnerAvailability: (value: SignalWriterRunnerAvailability) => void,
+) {
+  try {
+    const response = await fetch("/api/system/runtime", {
+      cache: "no-store",
+      headers: {
+        "x-dashboard-locale": locale,
+      },
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const payload = (await response.json()) as Partial<DashboardLabRuntimeSummaryResponse>;
+    const checks = new Map((payload.checks ?? []).map((item) => [item.id, item.status]));
+
+    setRunnerAvailability({
+      auto: true,
+      claude: checks.get("claude") === "pass",
+      codex: checks.get("codex") === "pass",
+      gemini: checks.get("gemini") === "pass",
+      openai: Boolean(payload.integrations?.openaiConfigured),
+      template: true,
+    });
+  } catch {
+    // Keep default availability when runtime diagnostics are unavailable.
+  }
 }
 
 function ResultBlock({

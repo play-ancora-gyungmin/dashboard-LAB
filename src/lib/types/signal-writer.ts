@@ -13,6 +13,7 @@ export type SignalWriterDraftMode =
   | "viral";
 
 export type SignalWriterQualityLevel = "rough" | "solid" | "strong";
+export type SignalWriterAiRunner = "auto" | "claude" | "codex" | "gemini" | "openai" | "template";
 
 export type SignalWriterVisualAccent =
   | "amber"
@@ -91,7 +92,7 @@ export interface SignalWriterDraft {
   postingTips: string[];
   quality: SignalWriterQualityScore;
   generatedAt: string;
-  sourceModel: "openai" | "template";
+  sourceModel: Exclude<SignalWriterAiRunner, "auto">;
   visualStrategy: SignalWriterVisualStrategy;
   coverImageUrl: string | null;
   markdownPath: string | null;
@@ -101,6 +102,7 @@ export interface SignalWriterDraft {
 export interface SignalWriterGenerateRequest {
   signal: SignalWriterSignal;
   mode?: SignalWriterDraftMode;
+  runner?: SignalWriterAiRunner;
 }
 
 export interface SignalWriterGenerateResponse {

@@ -1,10 +1,16 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import { spawn } from "node:child_process";
 
-import { hasOpenAiApiFallback, generateOpenAiText } from "@/lib/ai/openai-responses";
+import { generateOpenAiText, hasOpenAiApiFallback } from "@/lib/ai/openai-responses";
+import { runSpawnTask } from "@/lib/ai-skills/runner";
+import { checkCommandAvailable } from "@/lib/command-availability";
 import type { AppLocale } from "@/lib/locale";
+import { pathExists } from "@/lib/parsers/shared";
+import { buildSignalCoverImageUrl, buildSignalVisualStrategy } from "@/lib/signal-writer/visuals";
 import type {
+  SignalWriterAiRunner,
   SignalWriterAngle,
   SignalWriterDraft,
   SignalWriterDraftMode,
@@ -13,7 +19,6 @@ import type {
   SignalWriterQualityLevel,
   SignalWriterSignal,
 } from "@/lib/types";
-import { buildSignalCoverImageUrl, buildSignalVisualStrategy } from "@/lib/signal-writer/visuals";
 
 type DraftPayload = {
   hook: string;
@@ -27,26 +32,30 @@ type DraftPayload = {
 };
 
 const DEFAULT_MODE: SignalWriterDraftMode = "viral";
+const DEFAULT_RUNNER: SignalWriterAiRunner = "auto";
+const SIGNAL_WRITER_TIMEOUT_MS = 90_000;
 
 export async function generateSignalWriterDraft(
   signal: SignalWriterSignal,
   locale: AppLocale,
   mode: SignalWriterDraftMode = DEFAULT_MODE,
+  requestedRunner: SignalWriterAiRunner = DEFAULT_RUNNER,
 ): Promise<SignalWriterDraft> {
   const generatedAt = new Date().toISOString();
+  const prompt = buildPrompt(signal, locale, mode);
+  const resolvedRunner = await resolveSignalWriterRunner(requestedRunner);
 
-  if (hasOpenAiApiFallback()) {
+  if (resolvedRunner !== "template") {
     try {
-      const raw = await generateOpenAiText(buildPrompt(signal, locale, mode), {
-        model: "gpt-5-mini",
-        reasoningEffort: "low",
-      });
+      const raw = await runSignalWriterModel(resolvedRunner, prompt);
       const parsed = parseDraftPayload(raw);
       if (parsed) {
-        return normalizeDraft(signal, locale, mode, parsed, generatedAt, "openai");
+        return normalizeDraft(signal, locale, mode, parsed, generatedAt, resolvedRunner);
       }
-    } catch {
-      /* fall back to template */
+    } catch (error) {
+      if (requestedRunner !== "auto") {
+        throw error;
+      }
     }
   }
 
@@ -60,11 +69,153 @@ export async function generateSignalWriterDraft(
   );
 }
 
+async function resolveSignalWriterRunner(
+  requestedRunner: SignalWriterAiRunner,
+): Promise<Exclude<SignalWriterAiRunner, "auto">> {
+  if (requestedRunner === "template") {
+    return "template";
+  }
+
+  if (requestedRunner === "openai") {
+    if (!hasOpenAiApiFallback()) {
+      throw new Error("OpenAI API key is not configured.");
+    }
+    return "openai";
+  }
+
+  if (requestedRunner === "claude") {
+    if (await checkCommandAvailable("claude")) {
+      return "claude";
+    }
+    throw new Error("Claude CLI is not available.");
+  }
+
+  if (requestedRunner === "codex") {
+    if (await checkCommandAvailable("codex")) {
+      return "codex";
+    }
+    throw new Error("Codex CLI is not available.");
+  }
+
+  if (requestedRunner === "gemini") {
+    if ((await pathExists("/opt/homebrew/bin/gemini")) || (await checkCommandAvailable("gemini"))) {
+      return "gemini";
+    }
+    throw new Error("Gemini CLI is not available.");
+  }
+
+  if (await checkCommandAvailable("claude")) {
+    return "claude";
+  }
+
+  if (await checkCommandAvailable("codex")) {
+    return "codex";
+  }
+
+  if ((await pathExists("/opt/homebrew/bin/gemini")) || (await checkCommandAvailable("gemini"))) {
+    return "gemini";
+  }
+
+  if (hasOpenAiApiFallback()) {
+    return "openai";
+  }
+
+  return "template";
+}
+
+async function runSignalWriterModel(
+  runner: Exclude<SignalWriterAiRunner, "auto" | "template">,
+  prompt: string,
+) {
+  if (runner === "openai") {
+    return generateOpenAiText(prompt, { model: "gpt-5-mini", reasoningEffort: "low" });
+  }
+
+  if (runner === "claude") {
+    return runClaude(prompt);
+  }
+
+  if (runner === "codex") {
+    const outputPath = `/tmp/dashboard-lab-signal-writer-${randomUUID()}.txt`;
+    const result = await runSpawnTask({
+      command: "codex",
+      args: ["exec", "-o", outputPath, prompt],
+      cwd: process.env.HOME || "/",
+      outputPath,
+      timeoutMs: SIGNAL_WRITER_TIMEOUT_MS,
+    });
+    return unwrapOutput(result.output, result.error);
+  }
+
+  const geminiCommand = (await pathExists("/opt/homebrew/bin/gemini"))
+    ? "/opt/homebrew/bin/gemini"
+    : "gemini";
+  const result = await runSpawnTask({
+    command: geminiCommand,
+    args: ["-p", prompt],
+    cwd: process.env.HOME || "/",
+    timeoutMs: SIGNAL_WRITER_TIMEOUT_MS,
+  });
+  return unwrapOutput(result.output, result.error);
+}
+
+function runClaude(prompt: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(
+      "claude",
+      ["-p", "--output-format", "text", "--effort", "low"],
+      { cwd: process.env.HOME || "/", env: { ...process.env, TERM: "dumb" } },
+    );
+
+    let output = "";
+    let stderr = "";
+    const timer = setTimeout(() => {
+      proc.kill("SIGTERM");
+      reject(new Error("Signal Writer AI processing timed out."));
+    }, SIGNAL_WRITER_TIMEOUT_MS);
+
+    proc.stdout.on("data", (chunk: Buffer) => {
+      output += chunk.toString("utf8");
+    });
+
+    proc.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString("utf8");
+    });
+
+    proc.on("close", (code) => {
+      clearTimeout(timer);
+      if (code === 0) {
+        resolve(output.trim());
+        return;
+      }
+
+      reject(new Error(stderr.trim() || `Claude exited with code ${code ?? "unknown"}`));
+    });
+
+    proc.on("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+
+    proc.stdin.write(prompt);
+    proc.stdin.end();
+  });
+}
+
+function unwrapOutput(output: string | null, error: string | null) {
+  if (error) {
+    throw new Error(error);
+  }
+
+  if (!output) {
+    throw new Error("Signal Writer AI response is empty.");
+  }
+
+  return output;
+}
+
 function buildPrompt(signal: SignalWriterSignal, locale: AppLocale, mode: SignalWriterDraftMode) {
-  const modeGuide =
-    locale === "en"
-      ? getModeGuideEn(mode)
-      : getModeGuideKo(mode);
+  const modeGuide = locale === "en" ? getModeGuideEn(mode) : getModeGuideKo(mode);
 
   if (locale === "en") {
     return [
@@ -184,27 +335,25 @@ function buildTemplateDraft(
   mode: SignalWriterDraftMode,
 ): DraftPayload {
   const angle = buildAngle(signal, locale, mode);
-  const takeaway = getTakeaway(signal, locale);
+  const takeaway = getTakeaway(signal);
   const hooks = buildHookVariants(signal, locale, mode, takeaway);
   const hook = hooks[0]?.text ?? (locale === "en" ? signal.title : `오늘 볼 만한 건 ${signal.title}`);
   const hashtags = buildHashtags(signal, locale, mode);
 
   if (locale === "en") {
-    const shortPost = [
-      hook,
-      "",
-      `${signal.summary}`,
-      "",
-      `What matters: ${takeaway}`,
-      "",
-      `The real angle here is ${angle.summary.toLowerCase()}.`,
-    ].join("\n");
-
     return {
       hook,
       hookVariants: hooks,
       angle,
-      shortPost,
+      shortPost: [
+        hook,
+        "",
+        signal.summary,
+        "",
+        `What matters: ${takeaway}`,
+        "",
+        `The real angle here is ${angle.summary.toLowerCase()}.`,
+      ].join("\n"),
       threadPosts: [
         `1/ ${hook}`,
         `2/ ${signal.summary}`,
@@ -222,21 +371,19 @@ function buildTemplateDraft(
     };
   }
 
-  const shortPost = [
-    hook,
-    "",
-    signal.summary,
-    "",
-    `제가 중요하게 본 포인트는 ${takeaway}`,
-    "",
-    `이번 글의 각도는 ${angle.summary} 쪽입니다.`,
-  ].join("\n");
-
   return {
     hook,
     hookVariants: hooks,
     angle,
-    shortPost,
+    shortPost: [
+      hook,
+      "",
+      signal.summary,
+      "",
+      `제가 중요하게 본 포인트는 ${takeaway}`,
+      "",
+      `이번 글의 각도는 ${angle.summary} 쪽입니다.`,
+    ].join("\n"),
     threadPosts: [
       `1/ ${hook}`,
       `2/ ${signal.summary}`,
@@ -260,7 +407,7 @@ function normalizeDraft(
   mode: SignalWriterDraftMode,
   payload: DraftPayload,
   generatedAt: string,
-  sourceModel: "openai" | "template",
+  sourceModel: Exclude<SignalWriterAiRunner, "auto">,
 ): SignalWriterDraft {
   const hook = payload.hook.trim();
   const whyNow = payload.whyNow.trim();
@@ -356,12 +503,12 @@ function buildFallbackHookTexts(hook: string, locale: AppLocale) {
   if (locale === "en") {
     return [
       `Quietly important today: ${hook}`,
-      `The practical shift here is not the name, but what it changes for builders.`,
+      "The practical shift here is not the name, but what it changes for builders.",
     ];
   }
 
   return [
-    `오늘 그냥 넘기기 아까웠던 건 이 포인트였습니다.`,
+    "오늘 그냥 넘기기 아까웠던 건 이 포인트였습니다.",
     "이름보다 중요한 건, 이 변화가 실제 작업 방식으로 번질 수 있다는 점입니다.",
   ];
 }
@@ -380,11 +527,7 @@ function buildHashtagsFromPayload(
   return buildHashtags(signal, locale, mode);
 }
 
-function buildHashtags(
-  signal: SignalWriterSignal,
-  locale: AppLocale,
-  mode: SignalWriterDraftMode,
-) {
+function buildHashtags(signal: SignalWriterSignal, locale: AppLocale, mode: SignalWriterDraftMode) {
   const modeTags =
     locale === "en"
       ? {
@@ -482,18 +625,18 @@ function buildHookVariants(
       ],
       insight: [
         `This is the kind of update that quietly changes builder workflows: ${signal.title}.`,
-        `What matters here is not the launch itself, but the workflow shift behind it.`,
-        `This looks niche at first glance, but it points to a broader tool pattern.`,
+        "What matters here is not the launch itself, but the workflow shift behind it.",
+        "This looks niche at first glance, but it points to a broader tool pattern.",
       ],
       opinion: [
         `My take: ${signal.title} matters less as news and more as a direction signal.`,
-        `I would not file this under “just another release.” The practical change is the real story.`,
-        `The headline is fine. The second-order effect is the part worth paying attention to.`,
+        "I would not file this under “just another release.” The practical change is the real story.",
+        "The headline is fine. The second-order effect is the part worth paying attention to.",
       ],
       viral: [
         `Today’s “don’t just scroll past this” signal: ${signal.title}.`,
-        `This is one of those updates that looks small until you think about what it enables.`,
-        `If this pattern keeps spreading, people will point back to signals like this one.`,
+        "This is one of those updates that looks small until you think about what it enables.",
+        "If this pattern keeps spreading, people will point back to signals like this one.",
       ],
     } satisfies Record<SignalWriterDraftMode, string[]>;
 
@@ -507,22 +650,22 @@ function buildHookVariants(
   const hooks = {
     "news-brief": [
       `오늘 빠르게 봐둘 만한 신호는 ${signal.title}입니다.`,
-      `제목보다 중요한 건, 이 업데이트가 어디로 이어질 수 있느냐입니다.`,
+      "제목보다 중요한 건, 이 업데이트가 어디로 이어질 수 있느냐입니다.",
       "하루 지나면 묻히기 쉬운 타입이라 지금 짧게 짚어둘 가치가 있습니다.",
     ],
     insight: [
       `오늘 본 것 중 실무 감도가 높았던 건 ${signal.title}였습니다.`,
-      `이걸 뉴스로만 보면 약하고, 작업 흐름 변화로 보면 훨씬 의미가 커집니다.`,
+      "이걸 뉴스로만 보면 약하고, 작업 흐름 변화로 보면 훨씬 의미가 커집니다.",
       `핵심은 기능 설명이 아니라 ${takeaway}`,
     ],
     opinion: [
-      `제 관점에선 이건 단순한 업데이트보다 방향 신호에 가깝습니다.`,
-      `이런 건 기사보다 해석을 먼저 붙여야 가치가 생깁니다.`,
-      `제목만 보면 평범하지만, 실제로는 다음 흐름을 꽤 잘 보여줍니다.`,
+      "제 관점에선 이건 단순한 업데이트보다 방향 신호에 가깝습니다.",
+      "이런 건 기사보다 해석을 먼저 붙여야 가치가 생깁니다.",
+      "제목만 보면 평범하지만, 실제로는 다음 흐름을 꽤 잘 보여줍니다.",
     ],
     viral: [
       `오늘 그냥 넘기기 아까웠던 건 ${signal.title}였습니다.`,
-      `이건 이름보다 “어디까지 번질 수 있나”를 봐야 하는 업데이트입니다.`,
+      "이건 이름보다 “어디까지 번질 수 있나”를 봐야 하는 업데이트입니다.",
       "이런 신호는 지금 저장해두면 나중에 왜 중요했는지 더 잘 보입니다.",
     ],
   } satisfies Record<SignalWriterDraftMode, string[]>;
@@ -552,11 +695,11 @@ function scoreDraft(
     buildPointOfViewDimension(locale, input.shortPost, input.threadPosts),
     buildShareabilityDimension(locale, input.threadPosts, input.hashtags, input.whyNow),
   ];
+
   const total = Math.round(
     dimensions.reduce((sum, dimension) => sum + dimension.score, 0) / dimensions.length,
   ) * 10;
-  const level: SignalWriterQualityLevel =
-    total >= 80 ? "strong" : total >= 60 ? "solid" : "rough";
+  const level: SignalWriterQualityLevel = total >= 80 ? "strong" : total >= 60 ? "solid" : "rough";
 
   return {
     total,
@@ -703,12 +846,8 @@ function buildShareabilityDimension(
   };
 }
 
-function getTakeaway(signal: SignalWriterSignal, locale: AppLocale) {
-  const preferred = firstSentence(signal.whyItMatters) || firstSentence(signal.summary) || signal.title;
-  if (locale === "en") {
-    return preferred;
-  }
-  return preferred;
+function getTakeaway(signal: SignalWriterSignal) {
+  return firstSentence(signal.whyItMatters) || firstSentence(signal.summary) || signal.title;
 }
 
 function normalizeHashtags(values: string[]) {
