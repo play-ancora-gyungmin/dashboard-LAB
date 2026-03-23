@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
+import { getAiSkillsCopy } from "@/features/ai-skills/copy";
 import type { SkillRun, SkillTemplate } from "@/lib/types";
 
 interface SkillFormProps {
@@ -21,6 +23,8 @@ export function SkillForm({
   onSubmit,
   onCancel,
 }: SkillFormProps) {
+  const { locale } = useLocale();
+  const copy = getAiSkillsCopy(locale);
   const disabled = useMemo(
     () => runningRun?.status === "running" || runningRun?.status === "queued",
     [runningRun],
@@ -35,7 +39,7 @@ export function SkillForm({
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-[var(--color-muted)]">
-            실행 폼
+            {copy.formTitle}
           </p>
           <h3 className="mt-3 text-2xl font-semibold text-white">{skill.name}</h3>
           <p className="mt-3 text-sm leading-6 text-[var(--color-text-soft)]">
@@ -43,7 +47,7 @@ export function SkillForm({
           </p>
         </div>
         <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs text-white/70">
-          {skill.category}
+          {copy.categories[skill.category]}
         </span>
       </div>
       <div className="mt-6 grid gap-4">
@@ -75,7 +79,7 @@ export function SkillForm({
           disabled={disabled}
           className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-medium text-black transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {disabled ? "실행 중" : "실행"}
+          {disabled ? copy.running : copy.run}
         </button>
         {runningRun ? (
           <button
@@ -83,7 +87,7 @@ export function SkillForm({
             onClick={() => onCancel(runningRun.id)}
             className="rounded-full border border-white/12 bg-white/6 px-5 py-2 text-sm text-white transition hover:bg-white/10"
           >
-            취소
+            {copy.cancel}
           </button>
         ) : null}
       </div>

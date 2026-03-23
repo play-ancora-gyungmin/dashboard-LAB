@@ -1,10 +1,14 @@
 "use client";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
 import { usePinned } from "@/hooks/usePinned";
+import { getHomeCopy } from "@/features/home/copy";
 import { navigateDashboard } from "@/lib/navigation";
 import type { PinnedItem } from "@/lib/types";
 
 export function PinnedBar() {
+  const { locale } = useLocale();
+  const copy = getHomeCopy(locale);
   const { items, toggle } = usePinned();
 
   if (items.length === 0) {
@@ -16,14 +20,14 @@ export function PinnedBar() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-[var(--color-muted)]">
-            즐겨찾기
+            {copy.pinnedTitle}
           </p>
           <p className="mt-2 text-sm text-[var(--color-text-soft)]">
-            자주 쓰는 항목을 한 번에 열거나 복사합니다.
+            {copy.pinnedDescription}
           </p>
         </div>
         <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs text-white/70">
-          {items.length}개
+          {copy.pinnedCount(items.length)}
         </span>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -36,6 +40,9 @@ export function PinnedBar() {
 }
 
 function PinnedChip({ item, onRemove }: { item: PinnedItem; onRemove: () => void }) {
+  const { locale } = useLocale();
+  const copy = getHomeCopy(locale);
+
   return (
     <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-2 text-sm">
       <button
@@ -49,7 +56,7 @@ function PinnedChip({ item, onRemove }: { item: PinnedItem; onRemove: () => void
         type="button"
         onClick={onRemove}
         className="text-xs text-white/45 transition hover:text-white"
-        title="즐겨찾기 해제"
+        title={copy.removePinned}
       >
         ✕
       </button>

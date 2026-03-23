@@ -1,3 +1,7 @@
+"use client";
+
+import { useLocale } from "@/components/layout/LocaleProvider";
+import { getHomeCopy } from "@/features/home/copy";
 import type { McpServer } from "@/lib/types";
 
 interface McpPanelProps {
@@ -5,10 +9,13 @@ interface McpPanelProps {
 }
 
 export function McpPanel({ servers }: McpPanelProps) {
+  const { locale } = useLocale();
+  const copy = getHomeCopy(locale);
+
   if (servers.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/10 bg-transparent p-6 text-center text-sm text-gray-500">
-        MCP 서버가 없습니다
+        {copy.noMcp}
       </div>
     );
   }

@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
 import { DocHubList } from "@/features/doc-hub/components/DocHubList";
 import { DocSearch } from "@/features/doc-hub/components/DocSearch";
 import { DocViewer } from "@/features/doc-hub/components/DocViewer";
+import type { AppLocale } from "@/lib/locale";
 import type { DocContent, DocHubResponse, DocType } from "@/lib/types";
 
 const DEFAULT_FILTERS: DocType[] = ["claude", "codex", "gemini", "general"];
 
 export function DocHubTab() {
+  const { locale } = useLocale();
   const [data, setData] = useState<DocHubResponse | null>(null);
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<DocType[]>(DEFAULT_FILTERS);
@@ -27,13 +30,13 @@ export function DocHubTab() {
       <DocSearch
         query={query}
         onQueryChange={setQuery}
-        onSelectDoc={(project, file) => void handleSelectDoc(project, file, setSelectedDoc)}
+        onSelectDoc={(project, file) => void handleSelectDoc(project, file, locale, setSelectedDoc)}
       />
       <DocHubList
         docs={data?.docs ?? []}
         filters={filters}
         onToggleFilter={(type) => setFilters(toggleFilter(filters, type))}
-        onSelectDoc={(project, file) => void handleSelectDoc(project, file, setSelectedDoc)}
+        onSelectDoc={(project, file) => void handleSelectDoc(project, file, locale, setSelectedDoc)}
       />
       <DocViewer doc={selectedDoc} onClose={() => setSelectedDoc(null)} />
     </div>
@@ -43,11 +46,15 @@ export function DocHubTab() {
 async function handleSelectDoc(
   project: string,
   file: string,
+  locale: AppLocale,
   setSelectedDoc: (value: DocContent | null) => void,
 ) {
   const response = await fetch(
     `/api/doc-hub/content?project=${encodeURIComponent(project)}&file=${encodeURIComponent(file)}`,
-    { cache: "no-store" },
+    {
+      cache: "no-store",
+      headers: { "x-dashboard-locale": locale },
+    },
   );
 
   if (!response.ok) {

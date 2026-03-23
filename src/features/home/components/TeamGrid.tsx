@@ -1,4 +1,8 @@
+"use client";
+
+import { useLocale } from "@/components/layout/LocaleProvider";
 import { PinButton } from "@/components/ui/PinButton";
+import { getHomeCopy } from "@/features/home/copy";
 import type { Team } from "@/lib/types";
 
 interface TeamGridProps {
@@ -6,10 +10,13 @@ interface TeamGridProps {
 }
 
 export function TeamGrid({ teams }: TeamGridProps) {
+  const { locale } = useLocale();
+  const copy = getHomeCopy(locale);
+
   if (teams.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/10 bg-transparent p-6 text-center text-sm text-gray-500">
-        팀이 없습니다
+        {copy.noTeams}
       </div>
     );
   }
@@ -27,7 +34,7 @@ export function TeamGrid({ teams }: TeamGridProps) {
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded-full border border-white/12 bg-white/6 px-3 py-1 text-xs font-medium text-white/80">
-                {team.memberCount}명
+                {copy.memberCount(team.memberCount)}
               </span>
               <PinButton
                 item={{

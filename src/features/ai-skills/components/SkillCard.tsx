@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
+import { getAiSkillsCopy } from "@/features/ai-skills/copy";
 import type { SkillTemplate } from "@/lib/types";
 
 interface SkillCardProps {
@@ -9,6 +11,9 @@ interface SkillCardProps {
 }
 
 export function SkillCard({ skill, selected, onSelect }: SkillCardProps) {
+  const { locale } = useLocale();
+  const copy = getAiSkillsCopy(locale);
+
   return (
     <button
       type="button"
@@ -25,12 +30,12 @@ export function SkillCard({ skill, selected, onSelect }: SkillCardProps) {
           {skill.runner}
         </span>
         <span className="text-xs text-[var(--color-muted)]">
-          {skill.builtin ? "기본" : "사용자"}
+          {skill.builtin ? copy.builtin : copy.custom}
         </span>
       </div>
       <p className="mt-4 text-lg font-semibold text-white">{skill.name}</p>
       <p className="mt-3 text-sm leading-6 text-[var(--color-text-soft)]">
-        {skill.description}
+          {skill.description}
       </p>
     </button>
   );

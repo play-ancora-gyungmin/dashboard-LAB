@@ -1,0 +1,146 @@
+import type { AppLocale } from "@/lib/locale";
+import { pickLocale } from "@/lib/locale";
+import type { SkillCategory, SkillStatus } from "@/lib/types";
+
+export function getAiSkillsCopy(locale: AppLocale) {
+  return pickLocale(locale, {
+    ko: {
+      heroTitle: "반복 작업을 템플릿처럼 실행하는 탭",
+      heroDescription:
+        "프로젝트 조사, 문서 초안, 리뷰 보조처럼 자주 반복되는 작업을 한 번의 입력 폼으로 실행합니다. 처음에는 스킬 하나를 선택하고 필요한 값만 채운 뒤 실행하면 충분합니다.",
+      tracks: [
+        {
+          label: "프로젝트 조사",
+          title: "현재 코드베이스나 폴더를 빠르게 훑기",
+          description: "구조 파악, 체크리스트 생성, 리팩터 준비 같은 탐색성 작업에 적합합니다.",
+        },
+        {
+          label: "문서 초안",
+          title: "PRD, 요약, 제안서 초안 만들기",
+          description: "반복되는 입력 양식을 저장해두고 문서 초안을 일정한 형식으로 뽑을 수 있습니다.",
+        },
+        {
+          label: "리뷰 보조",
+          title: "코드 리뷰나 QA 메모 정리하기",
+          description: "검토 포인트를 빠르게 재사용하고 실행 히스토리까지 이어서 볼 수 있습니다.",
+        },
+      ],
+      coreModeTitle: "간단 모드 안내",
+      coreModeMessage:
+        "간단 모드에서는 먼저 템플릿 하나를 골라 실행하는 흐름만 생각하면 됩니다. 고급 자동화보다 반복되는 조사, 초안 작성, 리뷰 보조 작업부터 시작하는 편이 안정적입니다.",
+      feedbackTitle: "반영되었습니다",
+      reload: "다시 불러오기",
+      searchTitle: "스킬 탐색",
+      searchDescription: "이름, 설명, runner 기준으로 빠르게 찾을 수 있습니다.",
+      searchPlaceholder: "예: youtube, notion, codex review",
+      noResults: "검색 결과가 없습니다.",
+      emptyTitle: "아직 실행된 스킬이 없습니다.",
+      emptyMessage:
+        "위에서 스킬을 고르고 입력값을 채운 뒤 실행하면, 여기서 실행 히스토리와 결과를 계속 이어서 확인할 수 있습니다.",
+      queueAdded: (skillName: string) => `${skillName} 실행을 작업 큐에 추가했습니다.`,
+      cancelSuccess: "선택한 스킬 실행을 취소했습니다.",
+      runRequestFailed: "실행 요청에 실패했습니다.",
+      formTitle: "실행 폼",
+      run: "실행",
+      running: "실행 중",
+      cancel: "취소",
+      builtin: "기본",
+      custom: "사용자",
+      historyTitle: "실행 히스토리",
+      resultsCount: (count: number) => `${count}건`,
+      sortLatest: "최신순",
+      sortOldest: "오래된순",
+      sortStatus: "상태순",
+      noHistory: "아직 실행 이력이 없습니다.",
+      startedAt: "시작",
+      viewResult: "결과 보기",
+      status: {
+        queued: "대기 중",
+        running: "실행 중",
+        completed: "완료",
+        failed: "실패",
+      } satisfies Record<SkillStatus, string>,
+      close: "닫기",
+      copyResult: "결과 복사",
+      failedOutputTitle: "실패",
+      noOutput: "출력이 없습니다.",
+      categories: {
+        content: "콘텐츠",
+        research: "리서치",
+        automation: "자동화",
+        custom: "커스텀",
+      } satisfies Record<SkillCategory, string>,
+    },
+    en: {
+      heroTitle: "Run repeatable work like reusable templates",
+      heroDescription:
+        "Use one form for repeatable work such as project research, document drafting, and review assistance. Start by selecting one skill and filling only the required values.",
+      tracks: [
+        {
+          label: "Project research",
+          title: "Scan a codebase or folder quickly",
+          description: "Good for structure reviews, checklists, and refactor prep.",
+        },
+        {
+          label: "Drafting",
+          title: "Create PRDs, summaries, and proposals",
+          description: "Save repeatable inputs and generate consistent first drafts.",
+        },
+        {
+          label: "Review assist",
+          title: "Organize code review and QA notes",
+          description: "Reuse review prompts and keep output history in one place.",
+        },
+      ],
+      coreModeTitle: "Core mode note",
+      coreModeMessage:
+        "In core mode, think of this tab as a simple template runner first. Start with repeatable research, drafting, or review tasks before you use advanced automation.",
+      feedbackTitle: "Updated",
+      reload: "Reload",
+      searchTitle: "Browse skills",
+      searchDescription: "Search quickly by name, description, or runner.",
+      searchPlaceholder: "e.g. youtube, notion, codex review",
+      noResults: "No matching skills.",
+      emptyTitle: "No skill runs yet.",
+      emptyMessage:
+        "Pick a skill above, fill in the inputs, and run it. The history and results will continue to appear here.",
+      queueAdded: (skillName: string) => `Queued ${skillName}.`,
+      cancelSuccess: "Canceled the selected skill run.",
+      runRequestFailed: "Failed to start the skill run.",
+      formTitle: "Run form",
+      run: "Run",
+      running: "Running",
+      cancel: "Cancel",
+      builtin: "Built-in",
+      custom: "User",
+      historyTitle: "Run history",
+      resultsCount: (count: number) => `${count} runs`,
+      sortLatest: "Latest",
+      sortOldest: "Oldest",
+      sortStatus: "Status",
+      noHistory: "No runs yet.",
+      startedAt: "Started",
+      viewResult: "View result",
+      status: {
+        queued: "Queued",
+        running: "Running",
+        completed: "Completed",
+        failed: "Failed",
+      } satisfies Record<SkillStatus, string>,
+      close: "Close",
+      copyResult: "Copy result",
+      failedOutputTitle: "Failed",
+      noOutput: "No output available.",
+      categories: {
+        content: "Content",
+        research: "Research",
+        automation: "Automation",
+        custom: "Custom",
+      } satisfies Record<SkillCategory, string>,
+    },
+  });
+}
+
+export function formatAiSkillDate(locale: AppLocale, value: string) {
+  return new Date(value).toLocaleString(locale === "en" ? "en-US" : "ko-KR");
+}

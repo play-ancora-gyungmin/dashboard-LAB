@@ -1,4 +1,8 @@
+"use client";
+
+import { useLocale } from "@/components/layout/LocaleProvider";
 import { PinButton } from "@/components/ui/PinButton";
+import { getHomeCopy } from "@/features/home/copy";
 import type { Agent } from "@/lib/types";
 
 interface AgentGridProps {
@@ -6,10 +10,13 @@ interface AgentGridProps {
 }
 
 export function AgentGrid({ agents }: AgentGridProps) {
+  const { locale } = useLocale();
+  const copy = getHomeCopy(locale);
+
   if (agents.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-white/10 bg-transparent p-6 text-center text-sm text-gray-500">
-        에이전트가 없습니다
+        {copy.noAgents}
       </div>
     );
   }

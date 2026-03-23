@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
 import { FileTypeIcon } from "@/components/common/FileTypeIcon";
 import { Pagination } from "@/components/common/Pagination";
+import { formatDocHubDate, getDocHubCopy, getDocTypeLabel } from "@/features/doc-hub/copy";
 import type { DocType, ProjectDoc } from "@/lib/types";
 
 interface DocHubListProps {
@@ -12,13 +14,6 @@ interface DocHubListProps {
   onToggleFilter: (type: DocType) => void;
   onSelectDoc: (project: string, file: string) => void;
 }
-
-const DOC_TYPE_LABEL: Record<DocType, string> = {
-  claude: "Claude",
-  codex: "Codex",
-  gemini: "Gemini",
-  general: "General",
-};
 
 const DOC_TYPE_CLASS: Record<DocType, string> = {
   claude: "bg-purple-900/30 text-purple-300",
@@ -33,11 +28,13 @@ export function DocHubList({
   onToggleFilter,
   onSelectDoc,
 }: DocHubListProps) {
+  const { locale } = useLocale();
+  const copy = getDocHubCopy(locale);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<"latest" | "oldest" | "name">("latest");
   const pageSize = 8;
-  const grouped = groupDocs(sortDocs(docs.filter((doc) => filters.includes(doc.type)), sortBy));
+  const grouped = groupDocs(sortDocs(docs.filter((doc) => filters.includes(doc.type)), sortBy, locale));
   const entries = Object.entries(grouped);
   const pagedEntries = entries.slice((page - 1) * pageSize, page * pageSize);
   const filterKey = filters.join(",");
@@ -49,7 +46,7 @@ export function DocHubList({
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        {Object.entries(DOC_TYPE_LABEL).map(([type, label]) => {
+        {(["claude", "codex", "gemini", "general"] as const).map((type) => {
           const active = filters.includes(type as DocType);
 
           return (
@@ -62,7 +59,7 @@ export function DocHubList({
                 active ? DOC_TYPE_CLASS[type as DocType] : "bg-gray-800 text-gray-500",
               ].join(" ")}
             >
-              {active ? "✓ " : ""}{label}
+              {active ? "✓ " : ""}{getDocTypeLabel(type)}
             </button>
           );
         })}
@@ -71,9 +68,9 @@ export function DocHubList({
           onChange={(event) => setSortBy(event.target.value as "latest" | "oldest" | "name")}
           className="rounded-full border border-white/10 bg-black/15 px-3 py-1 text-xs text-white"
         >
-          <option value="latest">최신순</option>
-          <option value="oldest">오래된순</option>
-          <option value="name">이름순</option>
+          <option value="latest">{copy.sortLatest}</option>
+          <option value="oldest">{copy.sortOldest}</option>
+          <option value="name">{copy.sortName}</option>
         </select>
       </div>
 
@@ -92,7 +89,7 @@ export function DocHubList({
                   {isOpen ? "▼" : "▶"} {projectName}
                 </span>
                 <span className="rounded-full bg-gray-900 px-2.5 py-0.5 text-xs text-gray-400">
-                  {projectDocs.length}개 문서
+                  {copy.documentCount(projectDocs.length)}
                 </span>
               </button>
               {isOpen ? (
@@ -109,12 +106,12 @@ export function DocHubList({
                         <div>
                           <p className="text-sm text-white">{doc.filePath}</p>
                           <p className="mt-1 text-xs text-gray-500">
-                            {new Date(doc.lastModified).toLocaleDateString("ko-KR")}
+                            {formatDocHubDate(locale, doc.lastModified)}
                           </p>
                         </div>
                       </div>
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${DOC_TYPE_CLASS[doc.type]}`}>
-                        {doc.type}
+                        {getDocTypeLabel(doc.type)}
                       </span>
                     </button>
                   ))}
@@ -141,14 +138,18 @@ function groupDocs(docs: ProjectDoc[]) {
   }, {});
 }
 
-function sortDocs(docs: ProjectDoc[], sortBy: "latest" | "oldest" | "name") {
+function sortDocs(
+  docs: ProjectDoc[],
+  sortBy: "latest" | "oldest" | "name",
+  locale: "ko" | "en",
+) {
   return [...docs].sort((left, right) => {
     if (sortBy === "oldest") {
       return left.lastModifiedTimestamp - right.lastModifiedTimestamp;
     }
 
     if (sortBy === "name") {
-      return left.filePath.localeCompare(right.filePath, "ko-KR");
+      return left.filePath.localeCompare(right.filePath, locale === "en" ? "en-US" : "ko-KR");
     }
 
     return right.lastModifiedTimestamp - left.lastModifiedTimestamp;

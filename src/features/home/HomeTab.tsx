@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
 import { AgentGrid } from "@/features/home/components/AgentGrid";
 import { CommandPalette } from "@/features/home/components/CommandPalette";
 import { McpPanel } from "@/features/home/components/McpPanel";
@@ -10,6 +11,7 @@ import { PinnedBar } from "@/features/home/components/PinnedBar";
 import { SkillList } from "@/features/home/components/SkillList";
 import { TeamGrid } from "@/features/home/components/TeamGrid";
 import { ToolCard } from "@/features/home/components/ToolCard";
+import { formatHomeTime, formatTodayWorkSummary, getHomeCopy } from "@/features/home/copy";
 import type { DashboardNavigationMode } from "@/components/layout/TabNav";
 import { CLIENT_STORAGE_KEYS } from "@/lib/client-keys";
 import type { OverviewResponse } from "@/lib/types";
@@ -31,6 +33,8 @@ export function HomeTab({
   error = null,
   mode = "advanced",
 }: HomeTabProps) {
+  const { locale } = useLocale();
+  const copy = getHomeCopy(locale);
   const safeData = data ?? createEmptyOverviewData();
   const [openSections, setOpenSections] = useState<string[]>(defaultHomeSections(mode));
   const combinedClaudeItems = [...safeData.skills, ...safeData.commands];
@@ -41,9 +45,9 @@ export function HomeTab({
       description: command.description,
     })),
     {
-      label: "Codex 실행",
+      label: copy.quickCommand.label,
       value: 'codex exec -o /tmp/codex-output.txt "..."',
-      description: "Codex CLI 출력을 파일로 저장하는 빠른 실행 템플릿",
+      description: copy.quickCommand.description,
     },
   ];
 
@@ -57,41 +61,7 @@ export function HomeTab({
   }, [mode]);
 
   const isAdvancedMode = mode === "advanced";
-  const quickStartTracks = isAdvancedMode
-    ? [
-        {
-          label: "프로젝트 기준선",
-          title: "Projects와 Doc Hub로 현재 상태를 먼저 파악",
-          description: "내 프로젝트 목록, 핵심 문서, 변경 흐름을 먼저 보고 작업 기준선을 맞춥니다.",
-        },
-        {
-          label: "실행 보조",
-          title: "CS Helper, AI Skills, Call → PRD로 초안을 만든 뒤 다듬기",
-          description: "응답 초안, 반복 작업, 회의/이슈 문서화를 같은 워크스페이스 안에서 이어서 처리합니다.",
-        },
-        {
-          label: "운영/확장",
-          title: "필요할 때만 고급 도구 열기",
-          description: "에이전트, MCP, 빠른 명령어, 시스템 도구는 익숙해진 뒤 전체 모드에서 사용하는 흐름이 자연스럽습니다.",
-        },
-      ]
-    : [
-        {
-          label: "1단계",
-          title: "Projects로 내 작업 대상부터 확인",
-          description: "지금 다루는 프로젝트와 문서가 무엇인지 먼저 파악합니다.",
-        },
-        {
-          label: "2단계",
-          title: "CS Helper 또는 Doc Hub로 초안과 문맥 정리",
-          description: "고객 응답, 내부 공유, 문서 확인처럼 바로 써먹는 작업부터 시작합니다.",
-        },
-        {
-          label: "3단계",
-          title: "Info Hub와 Call → PRD는 필요할 때 추가",
-          description: "매일 업데이트와 긴 문서화 작업은 핵심 흐름이 잡힌 뒤에 붙이면 됩니다.",
-        },
-      ];
+  const quickStartTracks = isAdvancedMode ? copy.advancedTracks : copy.coreTracks;
 
   return (
     <div className="flex flex-col gap-8">
@@ -99,16 +69,16 @@ export function HomeTab({
       {loading || error ? (
         <section className="rounded-2xl border border-white/8 bg-[#1e1e1e] p-4 text-sm">
           <p className="font-medium text-white">
-            {loading ? "홈 요약 데이터를 불러오는 중입니다." : "홈 요약 데이터를 불러오지 못했습니다."}
+            {loading ? copy.loadingOverview : copy.failedOverview}
           </p>
           {error ? <p className="mt-2 text-[var(--color-muted)]">{error}</p> : null}
         </section>
       ) : null}
       <section className="grid gap-4 lg:grid-cols-4">
-        <StatCard label="에이전트" value={safeData.stats.totalAgents} accent="purple" />
-        <StatCard label="팀" value={safeData.stats.totalTeams} accent="purple" />
-        <StatCard label="Claude 스킬" value={safeData.stats.totalSkills} accent="purple" />
-        <StatCard label="Codex 스킬" value={safeData.stats.totalCodexSkills} accent="emerald" />
+        <StatCard label={copy.stats.agents} value={safeData.stats.totalAgents} accent="purple" />
+        <StatCard label={copy.stats.teams} value={safeData.stats.totalTeams} accent="purple" />
+        <StatCard label={copy.stats.claudeSkills} value={safeData.stats.totalSkills} accent="purple" />
+        <StatCard label={copy.stats.codexSkills} value={safeData.stats.totalCodexSkills} accent="emerald" />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
@@ -119,10 +89,9 @@ export function HomeTab({
 
       <section className="rounded-3xl border border-white/8 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.1),_transparent_42%),linear-gradient(180deg,_rgba(20,20,20,0.94),_rgba(14,14,14,0.98))] p-6">
         <p className="text-xs uppercase tracking-[0.24em] text-emerald-200/80">Workspace Flow</p>
-        <h2 className="mt-3 text-xl font-semibold tracking-tight text-white">이 워크스페이스에서 자주 하는 흐름</h2>
+        <h2 className="mt-3 text-xl font-semibold tracking-tight text-white">{copy.flowTitle}</h2>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--color-text-soft)]">
-          이 앱은 녹음 도구 하나를 위한 프로젝트가 아니라, 로컬 AI CLI를 통해 프로젝트 문맥을 읽고 문서 초안, 고객 대응,
-          뉴스 확인, 후속 작업 정리까지 이어서 처리하는 개인 워크스페이스입니다.
+          {copy.flowDescription}
         </p>
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           {quickStartTracks.map((item) => (
@@ -137,27 +106,27 @@ export function HomeTab({
 
       {!isAdvancedMode ? (
         <section className="rounded-2xl border border-cyan-400/15 bg-cyan-950/10 px-4 py-4 text-sm text-cyan-100">
-          간단 모드에서는 오늘 작업과 핵심 스킬만 먼저 보여줍니다. 에이전트, 팀, 빠른 명령어, MCP, 정책 요약은 전체 모드에서 확인할 수 있습니다.
+          {copy.coreModeMessage}
         </section>
       ) : null}
 
       <HomeSection
         id="today-work"
         eyebrow="Today"
-        title="오늘 작업"
+        title={copy.todayWorkTitle}
         openSections={openSections}
         setOpenSections={setOpenSections}
       >
         <section className="panel p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-white">최신 작업 10건</p>
+              <p className="text-sm font-semibold text-white">{copy.todayWorkPanelTitle}</p>
               <p className="mt-1 text-xs text-[var(--color-muted)]">
-                오늘 진행한 `Call → PRD`, `CS Helper`, `AI Skills` 작업을 최신순으로 보여줍니다.
+                {copy.todayWorkPanelDescription}
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs text-white/70">
-              {safeData.todayWork.length}건
+              {copy.todayWorkCount(safeData.todayWork.length)}
             </span>
           </div>
 
@@ -172,20 +141,22 @@ export function HomeTab({
                           {item.badge}
                         </span>
                         <span className={`rounded-full px-2.5 py-1 text-[11px] ${getTodayWorkStatusClass(item.status)}`}>
-                          {item.status}
+                          {copy.status[item.status as keyof typeof copy.status] ?? item.status}
                         </span>
                       </div>
                       <p className="mt-3 truncate text-sm font-medium text-white">{item.title}</p>
-                      <p className="mt-1 text-xs leading-6 text-[var(--color-text-soft)]">{item.summary}</p>
+                      <p className="mt-1 text-xs leading-6 text-[var(--color-text-soft)]">
+                        {formatTodayWorkSummary(locale, item.summary)}
+                      </p>
                     </div>
-                    <span className="shrink-0 text-xs text-[var(--color-muted)]">{formatWorkTime(item.createdAt)}</span>
+                    <span className="shrink-0 text-xs text-[var(--color-muted)]">{formatHomeTime(locale, item.createdAt)}</span>
                   </div>
                 </article>
               ))}
             </div>
           ) : (
             <div className="mt-4 rounded-2xl border border-dashed border-white/8 px-4 py-4 text-sm text-[var(--color-muted)]">
-              오늘 기록된 작업이 없습니다.
+              {copy.noTodayWork}
             </div>
           )}
         </section>
@@ -195,8 +166,8 @@ export function HomeTab({
         <>
           <HomeSection
             id="agents"
-            eyebrow="Claude 에이전트"
-            title="전문 에이전트 목록"
+            eyebrow={copy.sections.agentsEyebrow}
+            title={copy.sections.agentsTitle}
             openSections={openSections}
             setOpenSections={setOpenSections}
           >
@@ -205,8 +176,8 @@ export function HomeTab({
 
           <HomeSection
             id="teams"
-            eyebrow="Claude 팀"
-            title="팀 커맨드 프리셋"
+            eyebrow={copy.sections.teamsEyebrow}
+            title={copy.sections.teamsTitle}
             openSections={openSections}
             setOpenSections={setOpenSections}
           >
@@ -215,8 +186,8 @@ export function HomeTab({
 
           <HomeSection
             id="commands"
-            eyebrow="빠른 명령어"
-            title="바로 복사할 수 있는 바로가기"
+            eyebrow={copy.sections.commandsEyebrow}
+            title={copy.sections.commandsTitle}
             openSections={openSections}
             setOpenSections={setOpenSections}
           >
@@ -227,21 +198,21 @@ export function HomeTab({
 
       <HomeSection
         id="skills"
-        eyebrow="스킬"
-        title="Claude / Codex 스킬"
+        eyebrow={copy.sections.skillsEyebrow}
+        title={copy.sections.skillsTitle}
         openSections={openSections}
         setOpenSections={setOpenSections}
       >
         <section className="grid gap-4 xl:grid-cols-2">
           <SkillList
             items={combinedClaudeItems}
-            title="Claude 스킬 + 커맨드"
-            placeholder="Claude 스킬이나 커맨드 검색"
+            title={copy.sections.claudeSkillListTitle}
+            placeholder={copy.sections.claudeSkillPlaceholder}
           />
           <SkillList
             items={[...safeData.codex.skills, ...safeData.codex.promptSkills]}
-            title="Codex 스킬"
-            placeholder="Codex 스킬 검색"
+            title={copy.sections.codexSkillListTitle}
+            placeholder={copy.sections.codexSkillPlaceholder}
           />
         </section>
       </HomeSection>
@@ -250,8 +221,8 @@ export function HomeTab({
         <>
           <HomeSection
             id="mcp"
-            eyebrow="MCP 서버"
-            title="연결된 연동 정보"
+            eyebrow={copy.sections.mcpEyebrow}
+            title={copy.sections.mcpTitle}
             openSections={openSections}
             setOpenSections={setOpenSections}
           >
@@ -260,14 +231,14 @@ export function HomeTab({
 
           <HomeSection
             id="summary"
-            eyebrow="요약 문서"
-            title="Codex / Gemini 정책"
+            eyebrow={copy.sections.summaryEyebrow}
+            title={copy.sections.summaryTitle}
             openSections={openSections}
             setOpenSections={setOpenSections}
           >
             <section className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
-              <SummaryPanel title="Codex Role 요약" body={safeData.codex.roleSummary || "ROLE.md가 없습니다"} />
-              <SummaryPanel title="Gemini 정책" body={safeData.gemini.policySummary || "GEMINI.md가 없습니다"} />
+              <SummaryPanel title={copy.sections.codexRoleSummary} body={safeData.codex.roleSummary || copy.noRoleFile} />
+              <SummaryPanel title={copy.sections.geminiPolicy} body={safeData.gemini.policySummary || copy.noGeminiPolicy} />
             </section>
           </HomeSection>
         </>
@@ -401,15 +372,6 @@ function defaultHomeSections(mode: DashboardNavigationMode) {
   return mode === "advanced"
     ? sections
     : sections.filter((section) => !ADVANCED_HOME_SECTIONS.has(section));
-}
-
-function formatWorkTime(value: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(new Date(value));
 }
 
 function getTodayWorkBadgeClass(source: OverviewResponse["todayWork"][number]["source"]) {

@@ -2,9 +2,11 @@
 
 import { useDeferredValue, useEffect, useState } from "react";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
 import { Pagination } from "@/components/common/Pagination";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { PinButton } from "@/components/ui/PinButton";
+import { getHomeCopy } from "@/features/home/copy";
 import type { Command, CodexSkill, Skill } from "@/lib/types";
 
 type SkillLike = Skill | Command | CodexSkill;
@@ -16,6 +18,8 @@ interface SkillListProps {
 }
 
 export function SkillList({ items, title, placeholder }: SkillListProps) {
+  const { locale } = useLocale();
+  const copy = getHomeCopy(locale);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const deferredQuery = useDeferredValue(query);
@@ -56,7 +60,7 @@ export function SkillList({ items, title, placeholder }: SkillListProps) {
       <div className="mt-5 space-y-3">
         {filteredItems.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-6 text-sm text-[var(--color-text-soft)]">
-            설정 없음
+            {copy.noSettings}
           </div>
         ) : null}
         {pagedItems.map((item) => {

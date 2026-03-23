@@ -3,6 +3,8 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
+import { formatDocHubDate, getDocHubCopy, getDocTypeLabel } from "@/features/doc-hub/copy";
 import type { DocContent } from "@/lib/types";
 
 interface DocViewerProps {
@@ -18,6 +20,9 @@ const TYPE_CLASS = {
 } as const;
 
 export function DocViewer({ doc, onClose }: DocViewerProps) {
+  const { locale } = useLocale();
+  const copy = getDocHubCopy(locale);
+
   if (!doc) {
     return null;
   }
@@ -34,15 +39,15 @@ export function DocViewer({ doc, onClose }: DocViewerProps) {
           onClick={onClose}
           className="rounded-xl border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800"
         >
-          닫기
+          {copy.close}
         </button>
       </div>
       <div className="mt-4 flex items-center gap-2">
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${TYPE_CLASS[doc.type]}`}>
-          {doc.type}
+          {getDocTypeLabel(doc.type)}
         </span>
         <span className="text-xs text-gray-500">
-          {new Date(doc.lastModified).toLocaleString("ko-KR")}
+          {formatDocHubDate(locale, doc.lastModified)}
         </span>
       </div>
       <div className="prose prose-invert mt-6 max-h-[calc(100vh-180px)] overflow-auto pr-2 prose-p:text-gray-300">

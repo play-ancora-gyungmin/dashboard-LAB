@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
 import { Pagination } from "@/components/common/Pagination";
+import { formatAiSkillDate, getAiSkillsCopy } from "@/features/ai-skills/copy";
 import type { SkillRun } from "@/lib/types";
 
 interface RunHistoryProps {
@@ -12,6 +14,8 @@ interface RunHistoryProps {
 }
 
 export function RunHistory({ runs, onView, onCancel }: RunHistoryProps) {
+  const { locale } = useLocale();
+  const copy = getAiSkillsCopy(locale);
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<"latest" | "oldest" | "status">("latest");
   const pageSize = 6;
@@ -25,26 +29,26 @@ export function RunHistory({ runs, onView, onCancel }: RunHistoryProps) {
   return (
     <section className="panel p-6">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-lg font-semibold text-white">실행 히스토리</p>
+        <p className="text-lg font-semibold text-white">{copy.historyTitle}</p>
         <div className="flex items-center gap-2">
           <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs text-white/60">
-            {runs.length}건
+            {copy.resultsCount(runs.length)}
           </span>
           <select
             value={sortBy}
             onChange={(event) => setSortBy(event.target.value as "latest" | "oldest" | "status")}
             className="rounded-full border border-white/10 bg-black/15 px-3 py-1 text-xs text-white"
           >
-            <option value="latest">최신순</option>
-            <option value="oldest">오래된순</option>
-            <option value="status">상태순</option>
+            <option value="latest">{copy.sortLatest}</option>
+            <option value="oldest">{copy.sortOldest}</option>
+            <option value="status">{copy.sortStatus}</option>
           </select>
         </div>
       </div>
       <div className="mt-4 space-y-3">
         {runs.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 px-4 py-6 text-sm text-[var(--color-text-soft)]">
-            아직 실행 이력이 없습니다.
+            {copy.noHistory}
           </div>
         ) : null}
         {pagedRuns.map((run) => (
@@ -53,10 +57,10 @@ export function RunHistory({ runs, onView, onCancel }: RunHistoryProps) {
               <div>
                 <p className="font-medium text-white">{run.skillName}</p>
                 <p className="mt-2 text-xs text-[var(--color-muted)]">
-                  시작 {new Date(run.startedAt).toLocaleString("ko-KR")}
+                  {copy.startedAt} {formatAiSkillDate(locale, run.startedAt)}
                 </p>
               </div>
-              <span className={statusClassName(run.status)}>{statusLabel(run.status)}</span>
+              <span className={statusClassName(run.status)}>{copy.status[run.status]}</span>
             </div>
             <p className="mt-3 line-clamp-2 text-sm leading-6 text-[var(--color-text-soft)]">
               {run.prompt}
@@ -67,7 +71,7 @@ export function RunHistory({ runs, onView, onCancel }: RunHistoryProps) {
                 onClick={() => onView(run)}
                 className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-xs text-white transition hover:bg-white/10"
               >
-                결과 보기
+                {copy.viewResult}
               </button>
               {run.status === "queued" || run.status === "running" ? (
                 <button
@@ -75,7 +79,7 @@ export function RunHistory({ runs, onView, onCancel }: RunHistoryProps) {
                   onClick={() => onCancel(run.id)}
                   className="rounded-full border border-rose-400/25 bg-rose-400/10 px-3 py-1.5 text-xs text-rose-100 transition hover:bg-rose-400/15"
                 >
-                  취소
+                  {copy.cancel}
                 </button>
               ) : null}
             </div>
@@ -111,15 +115,6 @@ function sortRuns(runs: SkillRun[], sortBy: "latest" | "oldest" | "status") {
 
     return right.startedAt.localeCompare(left.startedAt);
   });
-}
-
-function statusLabel(status: SkillRun["status"]) {
-  return {
-    queued: "대기 중",
-    running: "실행 중",
-    completed: "완료",
-    failed: "실패",
-  }[status];
 }
 
 function statusClassName(status: SkillRun["status"]) {

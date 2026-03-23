@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
+import { getDocHubCopy } from "@/features/doc-hub/copy";
+import type { AppLocale } from "@/lib/locale";
 import type { DocSearchResult } from "@/lib/types";
 
 interface DocSearchProps {
@@ -11,22 +14,24 @@ interface DocSearchProps {
 }
 
 export function DocSearch({ query, onQueryChange, onSelectDoc }: DocSearchProps) {
+  const { locale } = useLocale();
+  const copy = getDocHubCopy(locale);
   const [results, setResults] = useState<DocSearchResult[]>([]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void fetchResults(query, setResults);
+      void fetchResults(query, locale, setResults);
     }, 300);
 
     return () => window.clearTimeout(timer);
-  }, [query]);
+  }, [query, locale]);
 
   return (
     <div className="relative">
       <input
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
-        placeholder="문서 검색..."
+        placeholder={copy.searchPlaceholder}
         className="w-full rounded-xl border border-gray-700 bg-gray-800 px-4 py-3 text-sm text-gray-300 outline-none placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
       />
       {results.length > 0 ? (
@@ -41,7 +46,7 @@ export function DocSearch({ query, onQueryChange, onSelectDoc }: DocSearchProps)
               <div className="flex items-center gap-2">
                 <span className="text-sm text-white">{result.doc.fileName}</span>
                 <span className="rounded-full bg-gray-700 px-2.5 py-0.5 text-[11px] text-gray-300">
-                  {result.matchType === "filename" ? "파일명" : "본문"}
+                  {result.matchType === "filename" ? copy.matchFilename : copy.matchContent}
                 </span>
               </div>
               <p className="text-xs text-gray-400">{result.snippet}</p>
@@ -53,7 +58,11 @@ export function DocSearch({ query, onQueryChange, onSelectDoc }: DocSearchProps)
   );
 }
 
-async function fetchResults(query: string, setResults: (value: DocSearchResult[]) => void) {
+async function fetchResults(
+  query: string,
+  locale: AppLocale,
+  setResults: (value: DocSearchResult[]) => void,
+) {
   const normalized = query.trim();
 
   if (!normalized) {
@@ -63,6 +72,7 @@ async function fetchResults(query: string, setResults: (value: DocSearchResult[]
 
   const response = await fetch(`/api/doc-hub/search?q=${encodeURIComponent(normalized)}`, {
     cache: "no-store",
+    headers: { "x-dashboard-locale": locale },
   });
 
   if (!response.ok) {

@@ -3,6 +3,9 @@ import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import type { AppLocale } from "@/lib/locale";
+import { DEFAULT_LOCALE } from "@/lib/locale";
+import { getAiSkillApiError } from "@/lib/ai-skills/messages";
 import { getRuntimeConfig } from "@/lib/runtime/config";
 import { getSkillTemplates } from "@/lib/ai-skills/templates";
 import { persistJson, readPersistentJson } from "@/lib/storage/persistent-json";
@@ -14,7 +17,7 @@ const MAX_HISTORY = 50;
 const MAX_STDOUT_BYTES = 1024 * 1024;
 const RUN_TIMEOUT_MS = 5 * 60 * 1000;
 const SKILL_RUNS_FILE = "skill-runs.json";
-const RECOVERY_ERROR_MESSAGE = "앱이 재시작되어 실행 중 작업이 중단되었습니다.";
+const RECOVERY_ERROR_MESSAGE = "The app restarted before the skill run finished.";
 
 const runStore = getRunStore();
 const processStore = getProcessStore();
@@ -52,12 +55,15 @@ export class SkillRunnerInputError extends Error {
   }
 }
 
-export async function queueSkillRun(request: SkillRunRequest): Promise<SkillRunResponse> {
-  const template = await getTemplateOrThrow(request.skillId);
-  validateInputs(template, request.inputs);
+export async function queueSkillRun(
+  request: SkillRunRequest,
+  locale: AppLocale = DEFAULT_LOCALE,
+): Promise<SkillRunResponse> {
+  const template = await getTemplateOrThrow(request.skillId, locale);
+  validateInputs(template, request.inputs, locale);
   const runId = crypto.randomUUID();
   const prompt = buildPrompt(template.promptTemplate, request.inputs);
-  const cwd = resolveRunDirectory(template, request.inputs);
+  const cwd = resolveRunDirectory(template, request.inputs, locale);
   const run: SkillRun = {
     id: runId,
     skillId: template.id,
@@ -89,7 +95,7 @@ export function getSkillHistory() {
   return { runs: runs.slice(0, MAX_HISTORY), totalCount: runs.length };
 }
 
-export function cancelSkillRun(runId: string) {
+export function cancelSkillRun(runId: string, locale: AppLocale = DEFAULT_LOCALE) {
   const run = runStore.get(runId);
 
   if (!run) {
@@ -98,13 +104,13 @@ export function cancelSkillRun(runId: string) {
 
   if (run.status === "queued") {
     queue.splice(queue.indexOf(runId), 1);
-    finalizeRun(runId, { status: "failed", error: "사용자가 대기 중 작업을 취소했습니다." });
+    finalizeRun(runId, { status: "failed", error: getAiSkillApiError(locale, "queuedCanceled") });
     return runStore.get(runId) ?? null;
   }
 
   const active = processStore.get(runId);
   active?.child.kill("SIGTERM");
-  finalizeRun(runId, { status: "failed", error: "사용자가 실행 중 작업을 취소했습니다." });
+  finalizeRun(runId, { status: "failed", error: getAiSkillApiError(locale, "runningCanceled") });
   processStore.delete(runId);
   processQueue();
   return runStore.get(runId) ?? null;
@@ -133,7 +139,7 @@ export async function runSpawnTask({
     stdoutBytes += chunk.byteLength;
     stdout += chunk.toString("utf8");
     if (stdoutBytes > maxOutputBytes) {
-      stderr = "출력 크기 제한을 초과했습니다.";
+      stderr = getAiSkillApiError(DEFAULT_LOCALE, "outputLimit");
       child.kill("SIGTERM");
     }
   });
@@ -151,7 +157,7 @@ export async function runSpawnTask({
       clearTimeout(timeout);
       resolve({
         output: outputPath ? await readCodexOutput(outputPath) : normalizeOutput(stdout),
-        error: code === 0 ? null : stderr.trim() || "실행이 비정상 종료되었습니다.",
+        error: code === 0 ? null : stderr.trim() || getAiSkillApiError(DEFAULT_LOCALE, "abnormalExit"),
         pid: child.pid ?? null,
         exitCode: code,
       });
@@ -209,7 +215,7 @@ async function processQueue() {
         continue;
       }
 
-      const template = await getTemplateOrThrow(run.skillId);
+      const template = await getTemplateOrThrow(run.skillId, DEFAULT_LOCALE);
       void executeRun(run, template);
     }
   } finally {
@@ -236,7 +242,7 @@ async function executeRun(run: SkillRun, template: SkillTemplate) {
     stdoutBytes += chunk.byteLength;
     stdout += chunk.toString("utf8");
     if (stdoutBytes > MAX_STDOUT_BYTES) {
-      stderr = "출력 크기 제한(1MB)을 초과했습니다.";
+      stderr = getAiSkillApiError(DEFAULT_LOCALE, "outputLimitHard");
       child.kill("SIGTERM");
     }
   });
@@ -249,7 +255,7 @@ async function executeRun(run: SkillRun, template: SkillTemplate) {
     clearTimeout(timeout);
     processStore.delete(run.id);
     const output = template.runner === "codex" ? await readCodexOutput(outputPath) : normalizeOutput(stdout);
-    const error = code === 0 ? null : stderr.trim() || "실행이 비정상 종료되었습니다.";
+    const error = code === 0 ? null : stderr.trim() || getAiSkillApiError(DEFAULT_LOCALE, "abnormalExit");
     finalizeRun(run.id, { status: code === 0 ? "completed" : "failed", output, error });
     void processQueue();
   });
@@ -276,27 +282,31 @@ function spawnRunner(template: SkillTemplate, prompt: string, cwd: string, outpu
   });
 }
 
-async function getTemplateOrThrow(skillId: string) {
-  const templates = await getSkillTemplates();
+async function getTemplateOrThrow(skillId: string, locale: AppLocale) {
+  const templates = await getSkillTemplates(locale);
   const template = templates.find((entry) => entry.id === skillId);
 
   if (!template) {
-    throw new SkillRunnerInputError("선택한 스킬 템플릿을 찾을 수 없습니다.");
+    throw new SkillRunnerInputError(getAiSkillApiError(locale, "missingTemplate"));
   }
 
   return template;
 }
 
-function validateInputs(template: SkillTemplate, inputs: Record<string, string>) {
+function validateInputs(
+  template: SkillTemplate,
+  inputs: Record<string, string>,
+  locale: AppLocale,
+) {
   template.inputs.forEach((input) => {
     const value = inputs[input.name]?.trim() ?? "";
 
     if (input.required && !value) {
-      throw new SkillRunnerInputError(`${input.label} 입력이 필요합니다.`);
+      throw new SkillRunnerInputError(getAiSkillApiError(locale, "missingInput", input.label));
     }
 
     if (value && input.type === "url" && !/^https?:\/\//.test(value)) {
-      throw new SkillRunnerInputError(`${input.label} 형식이 올바르지 않습니다.`);
+      throw new SkillRunnerInputError(getAiSkillApiError(locale, "invalidUrl", input.label));
     }
   });
 }
@@ -305,7 +315,11 @@ function buildPrompt(template: string, inputs: Record<string, string>) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => inputs[key]?.trim() ?? "").trim();
 }
 
-function resolveRunDirectory(template: SkillTemplate, inputs: Record<string, string>) {
+function resolveRunDirectory(
+  template: SkillTemplate,
+  inputs: Record<string, string>,
+  locale: AppLocale,
+) {
   const requested = template.runner === "codex" ? inputs.directory?.trim() ?? HOME_DIR : HOME_DIR;
   const normalized = requested.startsWith("~/") ? path.join(HOME_DIR, requested.slice(2)) : requested || HOME_DIR;
   const resolved = path.resolve(normalized);
@@ -320,7 +334,7 @@ function resolveRunDirectory(template: SkillTemplate, inputs: Record<string, str
     return resolved;
   }
 
-  throw new SkillRunnerInputError("허용된 실행 경로는 홈 디렉터리 또는 연결된 작업 루트 하위만 가능합니다.");
+  throw new SkillRunnerInputError(getAiSkillApiError(locale, "invalidPath"));
 }
 
 async function readCodexOutput(outputPath: string | null) {
