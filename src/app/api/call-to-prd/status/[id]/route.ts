@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 
 import { getRecord, updateStatus } from "@/lib/call-to-prd/call-store";
+import { getCallToPrdApiError } from "@/lib/call-to-prd/messages";
+import { readLocaleFromHeaders } from "@/lib/locale";
 import { buildSavedBundleEntryName, buildSavedBundleEntryPath, loadSavedBundle } from "@/lib/call-to-prd/saved-bundles";
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const locale = readLocaleFromHeaders(request.headers);
   const { id } = await params;
   const record = getRecord(id);
   if (!record) {
-    return NextResponse.json({ error: { code: "NOT_FOUND", message: "기록 없음" } }, { status: 404 });
+    return NextResponse.json({ error: getCallToPrdApiError(locale, "NOT_FOUND", locale === "en" ? "Record not found." : "기록 없음") }, { status: 404 });
   }
 
   const recovered = await recoverRecordFromSavedBundle(record);

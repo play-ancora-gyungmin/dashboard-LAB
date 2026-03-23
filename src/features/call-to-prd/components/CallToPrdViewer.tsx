@@ -25,7 +25,9 @@ import {
   getCallNextActionDescription,
   getCallNextActionLabel,
   getCallNextActionShortLabel,
+  formatCallToPrdProgressMessage,
   getCallToPrdCopy,
+  formatCallToPrdWarningMessage,
 } from "@/features/call-to-prd/copy";
 
 // ---------------------------------------------------------------------------
@@ -145,7 +147,7 @@ export function CallToPrdViewer(props: CallToPrdViewerProps) {
             <Step
               done={current.status === "completed"}
               active={current.status === "generating-docs"}
-              label={current.docGenerationProgress ?? copy.viewer.workingDocs}
+              label={formatCallToPrdProgressMessage(current.docGenerationProgress, locale) ?? copy.viewer.workingDocs}
             />
           )}
           <Step done={current.status === "completed"} label={copy.viewer.completed} />
@@ -230,7 +232,7 @@ export function CallToPrdViewer(props: CallToPrdViewerProps) {
 
               {generationWarnings.length > 0 && (
                 <div className="rounded-2xl border border-amber-500/20 bg-amber-950/20 px-4 py-3 text-sm text-amber-200">
-                  {copy.viewer.warningPrefix} {generationWarnings.join(" / ")}
+                  {copy.viewer.warningPrefix} {generationWarnings.map((warning) => formatCallToPrdWarningMessage(warning, locale)).join(" / ")}
                 </div>
               )}
 

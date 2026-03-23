@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
 import { readCallDocTemplateSets } from "@/lib/call-to-prd/template-sets";
 import type { ProjectSummary } from "@/lib/types";
 import type {
@@ -42,17 +43,20 @@ export function useCallToPrdData({
   setTemplateSets,
   setCurrent,
 }: UseCallToPrdDataParams) {
+  const { locale } = useLocale();
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchHistory = useCallback(async () => {
     try {
-      const res = await fetch("/api/call-to-prd/history");
+      const res = await fetch("/api/call-to-prd/history", {
+        headers: { "x-dashboard-locale": locale },
+      });
       const data = await res.json();
       setHistory(data.records ?? []);
     } catch {
       /* ignore */
     }
-  }, [setHistory]);
+  }, [locale, setHistory]);
 
   const fetchSaved = useCallback(async () => {
     try {
@@ -65,7 +69,9 @@ export function useCallToPrdData({
         params.set("query", deferredSavedQuery.trim());
       }
 
-      const res = await fetch(`/api/call-to-prd/saved?${params.toString()}`);
+      const res = await fetch(`/api/call-to-prd/saved?${params.toString()}`, {
+        headers: { "x-dashboard-locale": locale },
+      });
       const data: SavedCallBundleListResponse = await res.json();
       setSavedBundles(data.items ?? []);
       setSavedTotalCount(data.totalCount ?? 0);
@@ -78,6 +84,7 @@ export function useCallToPrdData({
     }
   }, [
     deferredSavedQuery,
+    locale,
     savedPage,
     setSavedBundles,
     setSavedPage,
@@ -87,7 +94,10 @@ export function useCallToPrdData({
 
   const fetchProjects = useCallback(async () => {
     try {
-      const res = await fetch("/api/call-to-prd/projects", { cache: "no-store" });
+      const res = await fetch("/api/call-to-prd/projects", {
+        cache: "no-store",
+        headers: { "x-dashboard-locale": locale },
+      });
       const data: CallToPrdProjectsResponse = await res.json();
       setProjects(data.projects ?? []);
       setCurrentProjectPath(data.currentProjectPath ?? "");
@@ -95,7 +105,7 @@ export function useCallToPrdData({
       setProjects([]);
       setCurrentProjectPath("");
     }
-  }, [setCurrentProjectPath, setProjects]);
+  }, [locale, setCurrentProjectPath, setProjects]);
 
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {
@@ -127,7 +137,9 @@ export function useCallToPrdData({
     stopPolling();
 
     const poll = async () => {
-      const res = await fetch(`/api/call-to-prd/status/${id}`);
+      const res = await fetch(`/api/call-to-prd/status/${id}`, {
+        headers: { "x-dashboard-locale": locale },
+      });
       const record: CallRecord = await res.json();
       setCurrent(record);
 
@@ -142,7 +154,7 @@ export function useCallToPrdData({
     };
 
     void poll();
-  }, [fetchHistory, fetchSaved, getPollingDelay, setCurrent, stopPolling]);
+  }, [fetchHistory, fetchSaved, getPollingDelay, locale, setCurrent, stopPolling]);
 
   useEffect(() => {
     void fetchHistory();

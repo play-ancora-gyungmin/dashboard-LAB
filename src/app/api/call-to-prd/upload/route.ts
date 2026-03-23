@@ -8,7 +8,6 @@ import { NextResponse } from "next/server";
 import { createRecord, updateStatus } from "@/lib/call-to-prd/call-store";
 import {
   buildGeneratedDocTitle,
-  CALL_DOC_DEFINITIONS,
   isCallDocPreset,
   normalizeSelectedDocTypes,
   type CallDocPreset,
@@ -30,7 +29,14 @@ import { resolveChangeRequestBaseline, saveGeneratedDocsBundle } from "@/lib/cal
 import { generateSupportingDocument } from "@/lib/call-to-prd/supporting-documents";
 import { buildCallWorkingContext } from "@/lib/call-to-prd/working-context";
 import { getWhisperSetupError, transcribeAudio } from "@/lib/call-to-prd/whisper-runner";
+import {
+  formatKnownCallToPrdRuntimeMessage,
+  getCallToPrdApiError,
+  getCallToPrdDirectInputLabel,
+  getCallToPrdDocLabel,
+} from "@/lib/call-to-prd/messages";
 import { hasOpenAiApiFallback } from "@/lib/ai/openai-responses";
+import { readLocaleFromHeaders } from "@/lib/locale";
 import type { CallGenerationMode, GeneratedDoc } from "@/lib/types/call-to-prd";
 
 const ALLOWED_AUDIO = [".m4a", ".mp3", ".wav", ".webm"];
@@ -40,6 +46,7 @@ const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20MB
 
 export async function POST(request: Request) {
   try {
+    const locale = readLocaleFromHeaders(request.headers);
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const pdfFile = formData.get("pdfFile") as File | null;
@@ -77,11 +84,11 @@ export async function POST(request: Request) {
     const id = randomUUID();
 
     if (!file && !directTranscript) {
-      return NextResponse.json({ error: { code: "NO_INPUT", message: "파일 또는 텍스트를 입력해주세요" } }, { status: 400 });
+      return NextResponse.json({ error: getCallToPrdApiError(locale, "NO_INPUT") }, { status: 400 });
     }
 
     let filePath: string | null = null;
-    let fileName = "직접 입력";
+    let fileName = getCallToPrdDirectInputLabel(locale);
     let fileSize = "0B";
     let pdfPath: string | null = null;
     let pdfFileName: string | null = null;
@@ -90,10 +97,10 @@ export async function POST(request: Request) {
     if (file) {
       const ext = path.extname(file.name).toLowerCase();
       if (!ALLOWED_AUDIO.includes(ext)) {
-        return NextResponse.json({ error: { code: "INVALID_FORMAT", message: `허용 형식: ${ALLOWED_AUDIO.join(", ")}` } }, { status: 400 });
+        return NextResponse.json({ error: getCallToPrdApiError(locale, "INVALID_FORMAT", ALLOWED_AUDIO.join(", ")) }, { status: 400 });
       }
       if (file.size > MAX_AUDIO_SIZE) {
-        return NextResponse.json({ error: { code: "TOO_LARGE", message: "최대 50MB" } }, { status: 400 });
+        return NextResponse.json({ error: getCallToPrdApiError(locale, "TOO_LARGE", locale === "en" ? "Maximum 50MB" : "최대 50MB") }, { status: 400 });
       }
 
       await mkdir(dir, { recursive: true });
@@ -107,10 +114,10 @@ export async function POST(request: Request) {
     if (pdfFile) {
       const ext = path.extname(pdfFile.name).toLowerCase();
       if (!ALLOWED_PDF.includes(ext)) {
-        return NextResponse.json({ error: { code: "INVALID_PDF", message: "PDF 파일만 허용됩니다" } }, { status: 400 });
+        return NextResponse.json({ error: getCallToPrdApiError(locale, "INVALID_PDF") }, { status: 400 });
       }
       if (pdfFile.size > MAX_PDF_SIZE) {
-        return NextResponse.json({ error: { code: "PDF_TOO_LARGE", message: "PDF 최대 20MB" } }, { status: 400 });
+        return NextResponse.json({ error: getCallToPrdApiError(locale, "PDF_TOO_LARGE", locale === "en" ? "Maximum PDF size is 20MB" : "PDF 최대 20MB") }, { status: 400 });
       }
 
       await mkdir(dir, { recursive: true });
@@ -170,6 +177,7 @@ export async function POST(request: Request) {
       intake,
       baselineEntryName,
       callDate,
+      locale,
       generationMode,
       generationPreset,
       selectedDocTypes,
@@ -177,7 +185,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id, status: "uploading" });
   } catch {
-    return NextResponse.json({ error: { code: "UPLOAD_FAILED", message: "업로드 실패" } }, { status: 500 });
+    const locale = readLocaleFromHeaders(request.headers);
+    return NextResponse.json({ error: getCallToPrdApiError(locale, "UPLOAD_FAILED") }, { status: 500 });
   }
 }
 
@@ -195,6 +204,7 @@ async function processCallAsync(
     intake: CallIntakeMetadata;
     baselineEntryName: string | null;
     callDate: string;
+    locale: ReturnType<typeof readLocaleFromHeaders>;
     generationMode: CallGenerationMode;
     generationPreset: CallDocPreset;
     selectedDocTypes: ReturnType<typeof normalizeSelectedDocTypes>;
@@ -215,7 +225,7 @@ async function processCallAsync(
       const whisperSetupError = await getWhisperSetupError();
       if (whisperSetupError) {
         updateStatus(id, "failed", {
-          error: whisperSetupError,
+          error: formatKnownCallToPrdRuntimeMessage(whisperSetupError, options.locale),
         });
         return;
       }
@@ -326,7 +336,7 @@ async function processCallAsync(
         [claudeResult] = await Promise.allSettled([runClaudePrd(prompt, { cwd: runnerCwd, allowOpenAiFallback: false })]);
       } else if (openAiAvailable) {
         effectiveGenerationMode = "openai";
-        generationWarnings.push("Claude CLI가 없어 OpenAI API 생성으로 전환했습니다.");
+        generationWarnings.push(formatKnownCallToPrdRuntimeMessage("Claude CLI가 없어 OpenAI API 생성으로 전환했습니다.", options.locale));
         [openAiResult] = await Promise.allSettled([
           runClaudePrd(prompt, {
             cwd: runnerCwd,
@@ -341,7 +351,7 @@ async function processCallAsync(
       if (!codexAvailable) {
         if (openAiAvailable) {
           effectiveGenerationMode = "openai";
-          generationWarnings.push("Codex CLI가 없어 OpenAI API 생성으로 전환했습니다.");
+          generationWarnings.push(formatKnownCallToPrdRuntimeMessage("Codex CLI가 없어 OpenAI API 생성으로 전환했습니다.", options.locale));
           [openAiResult] = await Promise.allSettled([
             runClaudePrd(prompt, {
               cwd: runnerCwd,
@@ -360,7 +370,10 @@ async function processCallAsync(
             baselineEntryName,
             baselineTitle,
             generationMode: options.generationMode,
-            error: "Codex CLI가 설치되어 있지 않습니다. Codex를 설치하거나 OpenAI API 키를 저장한 뒤 다시 시도해 주세요.",
+            error: formatKnownCallToPrdRuntimeMessage(
+              "Codex CLI가 설치되어 있지 않습니다. Codex를 설치하거나 OpenAI API 키를 저장한 뒤 다시 시도해 주세요.",
+              options.locale,
+            ),
           });
           return;
         }
@@ -375,7 +388,7 @@ async function processCallAsync(
             runCodexPrd(prompt, { cwd: runnerCwd }),
           ]);
         } else if (openAiAvailable) {
-          generationWarnings.push("Claude CLI가 없어 OpenAI API + Codex 조합으로 생성했습니다.");
+          generationWarnings.push(formatKnownCallToPrdRuntimeMessage("Claude CLI가 없어 OpenAI API + Codex 조합으로 생성했습니다.", options.locale));
           [openAiResult, codexResult] = await Promise.allSettled([
             runClaudePrd(prompt, {
               cwd: runnerCwd,
@@ -386,16 +399,16 @@ async function processCallAsync(
           ]);
         } else {
           effectiveGenerationMode = "codex";
-          generationWarnings.push("Claude CLI가 없어 Codex 단일 생성으로 전환했습니다.");
+          generationWarnings.push(formatKnownCallToPrdRuntimeMessage("Claude CLI가 없어 Codex 단일 생성으로 전환했습니다.", options.locale));
           [codexResult] = await Promise.allSettled([runCodexPrd(prompt, { cwd: runnerCwd })]);
         }
       } else if (claudeAvailable) {
         effectiveGenerationMode = "claude";
-        generationWarnings.push("Codex가 설치되어 있지 않아 Claude 단일 생성으로 전환했습니다.");
+        generationWarnings.push(formatKnownCallToPrdRuntimeMessage("Codex가 설치되어 있지 않아 Claude 단일 생성으로 전환했습니다.", options.locale));
         [claudeResult] = await Promise.allSettled([runClaudePrd(prompt, { cwd: runnerCwd, allowOpenAiFallback: false })]);
       } else if (openAiAvailable) {
         effectiveGenerationMode = "openai";
-        generationWarnings.push("Codex와 Claude CLI가 없어 OpenAI API 단일 생성으로 전환했습니다.");
+        generationWarnings.push(formatKnownCallToPrdRuntimeMessage("Codex와 Claude CLI가 없어 OpenAI API 단일 생성으로 전환했습니다.", options.locale));
         [openAiResult] = await Promise.allSettled([
           runClaudePrd(prompt, {
             cwd: runnerCwd,
@@ -414,7 +427,10 @@ async function processCallAsync(
           baselineEntryName,
           baselineTitle,
           generationMode: options.generationMode,
-          error: "Dual AI를 사용하려면 Claude 또는 Codex 중 하나 이상이 준비되어 있어야 합니다. CLI를 설치하거나 OpenAI API 키를 저장해 주세요.",
+          error: formatKnownCallToPrdRuntimeMessage(
+            "Dual AI를 사용하려면 Claude 또는 Codex 중 하나 이상이 준비되어 있어야 합니다. CLI를 설치하거나 OpenAI API 키를 저장해 주세요.",
+            options.locale,
+          ),
         });
         return;
       }
@@ -423,9 +439,9 @@ async function processCallAsync(
     const claudePrd = claudeResult?.status === "fulfilled" ? formatPrdMarkdown(claudeResult.value) : null;
     const codexPrd = codexResult?.status === "fulfilled" ? formatPrdMarkdown(codexResult.value) : null;
     const openAiPrd = openAiResult?.status === "fulfilled" ? formatPrdMarkdown(openAiResult.value) : null;
-    const claudeError = claudeResult?.status === "rejected" ? getErrorMessage(claudeResult.reason) : null;
-    const codexError = codexResult?.status === "rejected" ? getErrorMessage(codexResult.reason) : null;
-    const openAiError = openAiResult?.status === "rejected" ? getErrorMessage(openAiResult.reason) : null;
+    const claudeError = claudeResult?.status === "rejected" ? getErrorMessage(claudeResult.reason, options.locale) : null;
+    const codexError = codexResult?.status === "rejected" ? getErrorMessage(codexResult.reason, options.locale) : null;
+    const openAiError = openAiResult?.status === "rejected" ? getErrorMessage(openAiResult.reason, options.locale) : null;
 
     if (!claudePrd && !codexPrd && !openAiPrd) {
       updateStatus(id, "failed", {
@@ -439,6 +455,7 @@ async function processCallAsync(
         baselineTitle,
         generationMode: effectiveGenerationMode,
         error: buildGenerationFailureMessage({
+          locale: options.locale,
           generationMode: effectiveGenerationMode,
           claudeError,
           codexError,
@@ -479,11 +496,14 @@ async function processCallAsync(
       } catch (err) {
         console.error("PRD merge failed:", err);
         finalPrd = formatPrdMarkdown(primaryPrd);
-        diffReport = `(머지 실패: ${getErrorMessage(err)} / ${claudePrd ? "Claude" : "OpenAI API"} 결과 사용)`;
+        diffReport = options.locale === "en"
+          ? `(Merge failed: ${getErrorMessage(err, options.locale)} / using ${claudePrd ? "Claude" : "OpenAI API"} result)`
+          : `(머지 실패: ${getErrorMessage(err, options.locale)} / ${claudePrd ? "Claude" : "OpenAI API"} 결과 사용)`;
       }
     } else {
       finalPrd = formatPrdMarkdown(primaryPrd ?? codexPrd ?? "");
       diffReport = buildFallbackDiffReport({
+        locale: options.locale,
         generationMode: effectiveGenerationMode,
         claudePrd,
         codexPrd,
@@ -553,17 +573,20 @@ async function processCallAsync(
         diffReport,
         generationMode: effectiveGenerationMode,
         generatedDocs: [...generatedDocs],
-        docGenerationProgress: `실무 문서 생성 준비 (${supportingDocTypes.length}개)`,
+        docGenerationProgress: formatKnownCallToPrdRuntimeMessage(`실무 문서 생성 준비 (${supportingDocTypes.length}개)`, options.locale),
         generationWarnings: [...generationWarnings],
       });
 
       for (let index = 0; index < supportingDocTypes.length; index += 1) {
         const docType = supportingDocTypes[index];
-        const docLabel = CALL_DOC_DEFINITIONS[docType].label;
+        const docLabel = getCallToPrdDocLabel(docType, options.locale);
 
         updateStatus(id, "generating-docs", {
           generatedDocs: [...generatedDocs],
-          docGenerationProgress: `${index + 1}/${supportingDocTypes.length} · ${docLabel} 생성 중`,
+          docGenerationProgress: formatKnownCallToPrdRuntimeMessage(
+            `${index + 1}/${supportingDocTypes.length} · ${docLabel} 생성 중`,
+            options.locale,
+          ),
           generationWarnings: [...generationWarnings],
         });
 
@@ -597,11 +620,14 @@ async function processCallAsync(
           updateStatus(id, "generating-docs", {
             savedEntryName,
             generatedDocs: [...generatedDocs],
-            docGenerationProgress: `${index + 1}/${supportingDocTypes.length} · ${generatedDoc.title} 완료`,
+            docGenerationProgress: formatKnownCallToPrdRuntimeMessage(
+              `${index + 1}/${supportingDocTypes.length} · ${docLabel} 완료`,
+              options.locale,
+            ),
             generationWarnings: [...generationWarnings],
           });
         } catch (err) {
-          generationWarnings.push(`${docLabel}: ${getErrorMessage(err)}`);
+          generationWarnings.push(formatKnownCallToPrdRuntimeMessage(`${docLabel}: ${getErrorMessage(err, options.locale)}`, options.locale));
           savedEntryName = await persistGeneratedDocsSnapshot({
             id,
             savedEntryName,
@@ -623,7 +649,10 @@ async function processCallAsync(
           updateStatus(id, "generating-docs", {
             savedEntryName,
             generatedDocs: [...generatedDocs],
-            docGenerationProgress: `${index + 1}/${supportingDocTypes.length} · ${docLabel} 건너뜀`,
+            docGenerationProgress: formatKnownCallToPrdRuntimeMessage(
+              `${index + 1}/${supportingDocTypes.length} · ${docLabel} 건너뜀`,
+              options.locale,
+            ),
             generationWarnings: [...generationWarnings],
           });
         }
@@ -673,7 +702,7 @@ async function processCallAsync(
   } catch (err) {
     updateStatus(id, "failed", {
       savedEntryName,
-      error: err instanceof Error ? err.message : "알 수 없는 오류",
+      error: formatKnownCallToPrdRuntimeMessage(getErrorMessage(err, options.locale), options.locale),
     });
   }
 }
@@ -727,6 +756,7 @@ function formatSize(bytes: number): string {
 }
 
 function buildFallbackDiffReport(options: {
+  locale: ReturnType<typeof readLocaleFromHeaders>;
   generationMode: CallGenerationMode;
   claudePrd: string | null;
   codexPrd: string | null;
@@ -735,40 +765,40 @@ function buildFallbackDiffReport(options: {
   codexError: string | null;
   openAiError: string | null;
 }): string | null {
-  const { generationMode, claudePrd, codexPrd, openAiPrd, claudeError, codexError, openAiError } = options;
+  const { generationMode, claudePrd, codexPrd, openAiPrd, claudeError, codexError, openAiError, locale } = options;
 
   if (generationMode === "claude") {
-    return "(Claude 단일 생성 모드)";
+    return locale === "en" ? "(Claude single-generation mode)" : "(Claude 단일 생성 모드)";
   }
 
   if (generationMode === "codex") {
-    return "(Codex 단일 생성 모드)";
+    return locale === "en" ? "(Codex single-generation mode)" : "(Codex 단일 생성 모드)";
   }
 
   if (generationMode === "openai") {
-    return "(OpenAI API 단일 생성 모드)";
+    return locale === "en" ? "(OpenAI API single-generation mode)" : "(OpenAI API 단일 생성 모드)";
   }
 
   if ((claudePrd || openAiPrd) && !codexPrd) {
     if (codexError === "Codex 미설치") {
-      return "(Codex 미설치)";
+      return locale === "en" ? "(Codex not installed)" : "(Codex 미설치)";
     }
-    return `(Codex 실패: ${codexError ?? "알 수 없는 오류"})`;
+    return formatKnownCallToPrdRuntimeMessage(`Codex 실패: ${codexError ?? getErrorMessage(null, locale)}`, locale);
   }
 
   if (!claudePrd && !openAiPrd && codexPrd) {
     if (openAiError) {
-      return `(OpenAI API 실패: ${openAiError})`;
+      return formatKnownCallToPrdRuntimeMessage(`OpenAI API 실패: ${openAiError}`, locale);
     }
 
-    return `(Claude 실패: ${claudeError ?? "알 수 없는 오류"})`;
+    return formatKnownCallToPrdRuntimeMessage(`Claude 실패: ${claudeError ?? getErrorMessage(null, locale)}`, locale);
   }
 
   return null;
 }
 
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "알 수 없는 오류";
+function getErrorMessage(error: unknown, locale: ReturnType<typeof readLocaleFromHeaders>): string {
+  return error instanceof Error ? error.message : (locale === "en" ? "Unknown error" : "알 수 없는 오류");
 }
 
 function isCallGenerationMode(value: string): value is CallGenerationMode {
@@ -776,30 +806,31 @@ function isCallGenerationMode(value: string): value is CallGenerationMode {
 }
 
 function buildGenerationFailureMessage(options: {
+  locale: ReturnType<typeof readLocaleFromHeaders>;
   generationMode: CallGenerationMode;
   claudeError: string | null;
   codexError: string | null;
   openAiError: string | null;
 }): string {
-  const { generationMode, claudeError, codexError, openAiError } = options;
+  const { locale, generationMode, claudeError, codexError, openAiError } = options;
 
   if (generationMode === "claude") {
-    return `Claude 실패: ${claudeError ?? "알 수 없는 오류"}`;
+    return formatKnownCallToPrdRuntimeMessage(`Claude 실패: ${claudeError ?? getErrorMessage(null, locale)}`, locale);
   }
 
   if (generationMode === "codex") {
-    return `Codex 실패: ${codexError ?? "알 수 없는 오류"}`;
+    return formatKnownCallToPrdRuntimeMessage(`Codex 실패: ${codexError ?? getErrorMessage(null, locale)}`, locale);
   }
 
   if (generationMode === "openai") {
-    return `OpenAI API 실패: ${openAiError ?? "알 수 없는 오류"}`;
+    return formatKnownCallToPrdRuntimeMessage(`OpenAI API 실패: ${openAiError ?? getErrorMessage(null, locale)}`, locale);
   }
 
   const messages = [
-    claudeError ? `Claude 실패: ${claudeError}` : null,
-    openAiError ? `OpenAI API 실패: ${openAiError}` : null,
-    codexError ? `Codex 실패: ${codexError}` : null,
+    claudeError ? formatKnownCallToPrdRuntimeMessage(`Claude 실패: ${claudeError}`, locale) : null,
+    openAiError ? formatKnownCallToPrdRuntimeMessage(`OpenAI API 실패: ${openAiError}`, locale) : null,
+    codexError ? formatKnownCallToPrdRuntimeMessage(`Codex 실패: ${codexError}`, locale) : null,
   ].filter((message): message is string => Boolean(message));
 
-  return messages.join(" / ") || "AI 생성 실패";
+  return messages.join(" / ") || (locale === "en" ? "AI generation failed" : "AI 생성 실패");
 }

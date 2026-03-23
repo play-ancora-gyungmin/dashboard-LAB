@@ -193,7 +193,9 @@ export function CallToPrdHistory(props: CallToPrdHistoryProps) {
                         setSelectedHistory(null);
                         setSelectedSaved(bundle.entryName);
                         try {
-                          const res = await fetch(`/api/call-to-prd/saved/${encodeURIComponent(bundle.entryName)}`);
+                          const res = await fetch(`/api/call-to-prd/saved/${encodeURIComponent(bundle.entryName)}`, {
+                            headers: { "x-dashboard-locale": locale },
+                          });
                           if (!res.ok) {
                             return;
                           }

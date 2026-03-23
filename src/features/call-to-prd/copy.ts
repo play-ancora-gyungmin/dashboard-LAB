@@ -13,6 +13,10 @@ import type {
   CallNextActionType,
   CallRecord,
 } from "@/lib/types/call-to-prd";
+import {
+  formatKnownCallToPrdRuntimeMessage,
+  getCallToPrdApiError as getSharedCallToPrdApiError,
+} from "@/lib/call-to-prd/messages";
 
 const inputKindLabels: Record<CallInputKind, { ko: string; en: string }> = {
   meeting: { ko: "회의 메모", en: "Meeting notes" },
@@ -1095,7 +1099,19 @@ export function formatCallToPrdFailureMessage(error: string | null, locale: AppL
     });
   }
 
-  return error;
+  return formatKnownCallToPrdRuntimeMessage(error, locale);
+}
+
+export function formatCallToPrdProgressMessage(message: string | null, locale: AppLocale) {
+  if (!message) {
+    return null;
+  }
+
+  return formatKnownCallToPrdRuntimeMessage(message, locale);
+}
+
+export function formatCallToPrdWarningMessage(message: string, locale: AppLocale) {
+  return formatKnownCallToPrdRuntimeMessage(message, locale);
 }
 
 export function formatCallToPrdApiError(
@@ -1107,48 +1123,17 @@ export function formatCallToPrdApiError(
     return fallback;
   }
 
-  switch (error.code) {
-    case "NO_INPUT":
-      return pickLocale(locale, {
-        ko: "녹음 파일을 올리거나 텍스트 메모를 입력해 주세요.",
-        en: "Upload an audio file or enter text notes.",
-      });
-    case "INVALID_FORMAT":
-      return pickLocale(locale, {
-        ko: "허용되지 않는 파일 형식입니다. 오디오 형식과 PDF 형식을 다시 확인해 주세요.",
-        en: "Unsupported file format. Please check the allowed audio or PDF formats.",
-      });
-    case "TOO_LARGE":
-      return pickLocale(locale, {
-        ko: "오디오 파일이 너무 큽니다. 50MB 이하 파일로 다시 시도해 주세요.",
-        en: "The audio file is too large. Try again with a file under 50MB.",
-      });
-    case "PDF_TOO_LARGE":
-      return pickLocale(locale, {
-        ko: "PDF 파일이 너무 큽니다. 20MB 이하 PDF로 다시 시도해 주세요.",
-        en: "The PDF is too large. Try again with a PDF under 20MB.",
-      });
-    case "INVALID_PDF":
-      return pickLocale(locale, {
-        ko: "참고 자료는 PDF만 첨부할 수 있습니다.",
-        en: "Only PDF files are supported as reference attachments.",
-      });
-    case "INVALID_INPUT":
-      return pickLocale(locale, {
-        ko: "요청 값이 부족합니다. 입력값을 다시 확인해 주세요.",
-        en: "Required input is missing. Please review the request values.",
-      });
-    case "DELETE_FAILED":
-      return pickLocale(locale, {
-        ko: "삭제에 실패했습니다. 잠시 후 다시 시도해 주세요.",
-        en: "Delete failed. Please try again shortly.",
-      });
-    case "NOT_FOUND":
-      return pickLocale(locale, {
-        ko: "대상 항목을 찾지 못했습니다.",
-        en: "The requested item could not be found.",
-      });
-    default:
-      return error.message ?? fallback;
+  if (error.code) {
+    const resolved = getSharedCallToPrdApiError(
+      locale,
+      error.code as Parameters<typeof getSharedCallToPrdApiError>[1],
+      error.message,
+    );
+
+    if (resolved.message) {
+      return resolved.message;
+    }
   }
+
+  return error.message ? formatKnownCallToPrdRuntimeMessage(error.message, locale) : fallback;
 }

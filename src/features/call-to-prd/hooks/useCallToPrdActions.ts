@@ -202,7 +202,11 @@ export function useCallToPrdActions({
     setPrdView("merged");
 
     try {
-      const res = await fetch("/api/call-to-prd/upload", { method: "POST", body: formData });
+      const res = await fetch("/api/call-to-prd/upload", {
+        method: "POST",
+        headers: { "x-dashboard-locale": locale },
+        body: formData,
+      });
       const data = await res.json();
 
       if (!res.ok) {
@@ -233,7 +237,10 @@ export function useCallToPrdActions({
     try {
       const response = await fetch("/api/call-to-prd/actions/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-dashboard-locale": locale,
+        },
         body: JSON.stringify({
           actionType,
           savedEntryName: displayRecord.savedEntryName,
@@ -395,6 +402,7 @@ export function useCallToPrdActions({
         try {
           const response = await fetch(`/api/call-to-prd/saved/${encodeURIComponent(entryName)}`, {
             method: "DELETE",
+            headers: { "x-dashboard-locale": locale },
           });
 
           if (!response.ok) {
@@ -427,7 +435,10 @@ export function useCallToPrdActions({
         try {
           const response = await fetch("/api/call-to-prd/history", {
             method: "DELETE",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "x-dashboard-locale": locale,
+            },
             body: JSON.stringify({ id: recordId }),
           });
 

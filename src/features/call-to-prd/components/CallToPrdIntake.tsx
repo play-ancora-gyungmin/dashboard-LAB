@@ -43,6 +43,7 @@ import {
   getCallInputKindLabel,
   getCallPresetDescription,
   getCallPresetLabel,
+  formatCallToPrdProgressMessage,
   getCallReproducibilityLabel,
   getCallSeverityLabel,
   getCallToPrdCopy,
@@ -471,7 +472,7 @@ export function CallToPrdIntake(props: CallToPrdIntakeProps) {
                     <span className="text-xs text-purple-300">{buildStatusLabel(record.status, locale)}</span>
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
-                    {record.docGenerationProgress ?? buildStatusLabel(record.status, locale)}
+                    {formatCallToPrdProgressMessage(record.docGenerationProgress, locale) ?? buildStatusLabel(record.status, locale)}
                   </p>
                 </button>
               )) : (
