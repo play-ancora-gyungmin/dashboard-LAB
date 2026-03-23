@@ -1,0 +1,111 @@
+import { pickLocale, type AppLocale } from "@/lib/locale";
+import type { FeedCategory } from "@/lib/types";
+
+export function getInfoHubCopy(locale: AppLocale) {
+  return pickLocale(locale, {
+    ko: {
+      eyebrow: "Info Hub",
+      title: "매일 확인할 뉴스, 패키지 변화, 보안 이슈를 모아보는 탭",
+      description:
+        "AI 트렌드, 기술 뉴스, 패키지 업데이트, 보안 점검 결과를 한 화면에서 확인합니다. 일을 시작하기 전에 오늘 어떤 변화가 있었는지 빠르게 훑어보는 용도로 쓰는 탭입니다.",
+      cards: [
+        {
+          label: "오늘 이슈",
+          title: "기술 뉴스와 트렌드 먼저 파악",
+          description: "카테고리별 피드를 보면서 오늘 확인할 만한 이슈를 빠르게 추립니다.",
+        },
+        {
+          label: "내 환경 변화",
+          title: "패키지와 보안 상태 확인",
+          description: "내 프로젝트에 영향을 줄 수 있는 업데이트와 감사 결과를 함께 봅니다.",
+        },
+        {
+          label: "후속 연결",
+          title: "필요하면 AI Skills나 Projects로 이어가기",
+          description: "발견한 이슈를 바로 조사하거나 프로젝트 작업으로 넘길 때 기준점이 됩니다.",
+        },
+      ],
+      coreModeTitle: "간단 모드 안내",
+      coreModeMessage:
+        "처음에는 전체 카테고리로 두고 트렌드와 기사 목록만 훑어보면 됩니다. 패키지 업데이트와 보안 항목은 익숙해진 뒤 필요한 때만 자세히 보면 충분합니다.",
+      loadingFeed: "기사와 패키지 정보를 불러오는 중입니다.",
+      emptyFeed: "현재 표시할 기사가 없습니다. 다른 카테고리를 선택하거나 잠시 후 새로고침해 보세요.",
+      feedLoadFailed: "기사 목록을 불러오지 못했습니다.",
+      toolbarTitle: "Info Hub",
+      toolbarDescription: "해외/국내 개발 소식과 내 프로젝트 업데이트를 한 곳에서 봅니다.",
+      refreshing: "새로고침 중",
+      refresh: "새로고침",
+      filterPlaceholder: "제목, 소스, 태그, 요약으로 검색",
+      all: "전체",
+      aiSkillsTitle: "AI 스킬 트렌드 & 추천",
+      aiSkillsDescription: "GitHub와 npm 공개 소스를 기준으로 Claude, Codex, Gemini별 유행 스킬 후보를 모았습니다.",
+      currentProject: "현재 프로젝트",
+      recommendationsCount: (count: number) => `${count}개 추천`,
+      recommendationReason: "추천 이유",
+      openNow: "바로 보기",
+      packageUpdatesTitle: "패키지 업데이트",
+      packageUpdatesDescription: "현재 프로젝트에서 버전 차이가 있는 패키지를 빠르게 확인합니다.",
+      securityTitle: "보안 알림",
+      bookmarked: "북마크됨",
+      bookmark: "북마크",
+      openOriginal: "원문 보기",
+      translateLink: "번역 링크",
+      source: "소스",
+      scrape: "크롤링",
+    },
+    en: {
+      eyebrow: "Info Hub",
+      title: "A daily briefing view for news, package changes, and security signals",
+      description:
+        "Track AI trends, developer news, package updates, and security checks from one screen. Use it as a quick briefing before you start work.",
+      cards: [
+        {
+          label: "Today",
+          title: "Scan the key news and trends first",
+          description: "Use category feeds to quickly identify what is worth checking today.",
+        },
+        {
+          label: "My stack",
+          title: "Check package and security changes",
+          description: "See updates and audit signals that could affect your current projects.",
+        },
+        {
+          label: "Next step",
+          title: "Jump into AI Skills or Projects if needed",
+          description: "Use what you find here as a starting point for deeper research or project work.",
+        },
+      ],
+      coreModeTitle: "Simple mode",
+      coreModeMessage:
+        "Start with the full category and skim the trending panels plus the article list. You can dig into package updates and security sections only when they become relevant.",
+      loadingFeed: "Loading articles and package data...",
+      emptyFeed: "There are no articles to show right now. Try another category or refresh again in a moment.",
+      feedLoadFailed: "Failed to load the article list.",
+      toolbarTitle: "Info Hub",
+      toolbarDescription: "See global and Korean dev news plus updates from your own stack in one place.",
+      refreshing: "Refreshing",
+      refresh: "Refresh",
+      filterPlaceholder: "Search by title, source, tags, or summary",
+      all: "All",
+      aiSkillsTitle: "AI skill trends & picks",
+      aiSkillsDescription: "Curated public skill candidates for Claude, Codex, and Gemini based on GitHub and npm sources.",
+      currentProject: "Current project",
+      recommendationsCount: (count: number) => `${count} picks`,
+      recommendationReason: "Why this was picked",
+      openNow: "Open",
+      packageUpdatesTitle: "Package updates",
+      packageUpdatesDescription: "Quickly check packages with version gaps in your current projects.",
+      securityTitle: "Security alerts",
+      bookmarked: "Bookmarked",
+      bookmark: "Bookmark",
+      openOriginal: "Open source",
+      translateLink: "Translate",
+      source: "Source",
+      scrape: "Scrape",
+    },
+  });
+}
+
+export function getInfoHubCategoryLabel(category: FeedCategory, locale: AppLocale) {
+  return locale === "en" ? category.labelEn || category.label : category.label;
+}

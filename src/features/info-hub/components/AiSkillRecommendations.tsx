@@ -1,8 +1,13 @@
 "use client";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
+import { getInfoHubCopy } from "@/features/info-hub/copy";
 import type { AiSkillRecommendationsResponse } from "@/lib/types";
 
 export function AiSkillRecommendations({ data }: { data: AiSkillRecommendationsResponse | null }) {
+  const { locale } = useLocale();
+  const copy = getInfoHubCopy(locale);
+
   if (!data || data.sections.length === 0) {
     return null;
   }
@@ -11,16 +16,16 @@ export function AiSkillRecommendations({ data }: { data: AiSkillRecommendationsR
     <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-white">AI 스킬 트렌드 & 추천</p>
+          <p className="text-sm font-medium text-white">{copy.aiSkillsTitle}</p>
           <p className="mt-1 text-xs leading-5 text-white/45">
-            GitHub와 npm 공개 소스를 기준으로 Claude, Codex, Gemini별 유행 스킬 후보를 모았습니다.
+            {copy.aiSkillsDescription}
           </p>
         </div>
         {data.projectSignals.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {data.projectSignals.map((signal) => (
               <span key={signal} className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-200">
-                현재 프로젝트: {signal}
+                {copy.currentProject}: {signal}
               </span>
             ))}
           </div>
@@ -33,7 +38,7 @@ export function AiSkillRecommendations({ data }: { data: AiSkillRecommendationsR
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-base font-semibold text-white">{section.model}</h3>
               <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/55">
-                {section.items.length}개 추천
+                {copy.recommendationsCount(section.items.length)}
               </span>
             </div>
             <p className="mt-2 text-sm leading-6 text-white/55">{section.summary}</p>
@@ -51,11 +56,11 @@ export function AiSkillRecommendations({ data }: { data: AiSkillRecommendationsR
                       </span>
                     ))}
                   </div>
-                  <h4 className="mt-3 text-sm font-semibold text-white">{item.titleKo || item.title}</h4>
+                  <h4 className="mt-3 text-sm font-semibold text-white">{locale === "en" ? item.title : item.titleKo || item.title}</h4>
                   <p className="mt-2 text-sm leading-6 text-white/65">{item.summary}</p>
                   {item.extra?.recommendationReason ? (
                     <div className="mt-3 rounded-xl border border-amber-500/15 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-100">
-                      추천 이유: {item.extra.recommendationReason}
+                      {copy.recommendationReason}: {item.extra.recommendationReason}
                     </div>
                   ) : null}
                   <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -65,13 +70,13 @@ export function AiSkillRecommendations({ data }: { data: AiSkillRecommendationsR
                       rel="noreferrer"
                       className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-200"
                     >
-                      바로 보기
+                      {copy.openNow}
                     </a>
                     {typeof item.extra?.stars === "number" ? (
-                      <span className="text-xs text-white/45">Stars {item.extra.stars.toLocaleString("ko-KR")}</span>
+                      <span className="text-xs text-white/45">Stars {item.extra.stars.toLocaleString(locale === "en" ? "en-US" : "ko-KR")}</span>
                     ) : null}
                     {typeof item.extra?.weeklyDownloads === "number" ? (
-                      <span className="text-xs text-white/45">Score {item.extra.weeklyDownloads.toLocaleString("ko-KR")}</span>
+                      <span className="text-xs text-white/45">Score {item.extra.weeklyDownloads.toLocaleString(locale === "en" ? "en-US" : "ko-KR")}</span>
                     ) : null}
                   </div>
                 </div>

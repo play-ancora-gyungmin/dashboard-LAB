@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
+import { getInfoHubCopy } from "@/features/info-hub/copy";
 import type { PackageUpdatesResponse } from "@/lib/types";
 
 export function PackageUpdates({ data }: { data: PackageUpdatesResponse | null }) {
+  const { locale } = useLocale();
+  const copy = getInfoHubCopy(locale);
   const [open, setOpen] = useState(true);
 
   if (!data) {
@@ -20,8 +24,8 @@ export function PackageUpdates({ data }: { data: PackageUpdatesResponse | null }
         className="flex w-full items-center justify-between text-left"
       >
         <div>
-          <p className="text-sm font-semibold text-white">패키지 업데이트</p>
-          <p className="mt-1 text-xs text-white/45">현재 프로젝트에서 버전 차이가 있는 패키지를 빠르게 확인합니다.</p>
+          <p className="text-sm font-semibold text-white">{copy.packageUpdatesTitle}</p>
+          <p className="mt-1 text-xs text-white/45">{copy.packageUpdatesDescription}</p>
         </div>
         <ChevronDown className={`h-4 w-4 text-white/45 transition-transform duration-[150ms] ${open ? "rotate-180" : ""}`} />
       </button>

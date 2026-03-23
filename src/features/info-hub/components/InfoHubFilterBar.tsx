@@ -1,23 +1,28 @@
 "use client";
 
+import { getInfoHubCategoryLabel, getInfoHubCopy } from "@/features/info-hub/copy";
 import type { FeedCategory, FeedCategoryId } from "@/lib/types";
+import type { AppLocale } from "@/lib/locale";
 
 interface InfoHubFilterBarProps {
   categories: FeedCategory[];
   category: FeedCategoryId | "all";
   query: string;
+  locale: AppLocale;
+  copy?: ReturnType<typeof getInfoHubCopy>;
   onChange: (value: FeedCategoryId | "all") => void;
   onQueryChange: (value: string) => void;
 }
 
-export function InfoHubFilterBar({ categories, category, query, onChange, onQueryChange }: InfoHubFilterBarProps) {
+export function InfoHubFilterBar({ categories, category, query, locale, copy: providedCopy, onChange, onQueryChange }: InfoHubFilterBarProps) {
+  const copy = providedCopy ?? getInfoHubCopy(locale);
   return (
     <div className="space-y-3">
       <input
         type="search"
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
-        placeholder="제목, 소스, 태그, 요약으로 검색"
+        placeholder={copy.filterPlaceholder}
         className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-blue-500/40"
       />
       <div className="flex flex-wrap gap-2">
@@ -26,7 +31,7 @@ export function InfoHubFilterBar({ categories, category, query, onChange, onQuer
           onClick={() => onChange("all")}
           className={chipClass(category === "all")}
         >
-          전체
+          {copy.all}
         </button>
         {categories.map((item) => (
           <button
@@ -35,7 +40,7 @@ export function InfoHubFilterBar({ categories, category, query, onChange, onQuer
             onClick={() => onChange(item.id)}
             className={chipClass(category === item.id)}
           >
-            {item.label}
+            {getInfoHubCategoryLabel(item, locale)}
           </button>
         ))}
       </div>

@@ -6,6 +6,7 @@ import type {
   FeedSourcesResponse,
   TrendingResponse,
 } from "@/lib/types";
+import type { AppLocale } from "@/lib/locale";
 
 import { clearCache, readThroughCache } from "@/lib/parsers/cache";
 
@@ -67,15 +68,16 @@ export async function getInfoHubTrending(options?: { forceRefresh?: boolean }): 
 }
 
 export async function getAiSkillRecommendations(
-  options?: { forceRefresh?: boolean },
+  options?: { forceRefresh?: boolean; locale?: AppLocale },
 ): Promise<AiSkillRecommendationsResponse> {
-  const cacheKey = "info-hub:ai-skills:recommendations";
+  const locale = options?.locale ?? "ko";
+  const cacheKey = `info-hub:ai-skills:recommendations:${locale}`;
 
   if (options?.forceRefresh) {
     clearCache(cacheKey);
   }
 
-  return readThroughCache(cacheKey, DAY_MS, fetchAiSkillRecommendations);
+  return readThroughCache(cacheKey, DAY_MS, () => fetchAiSkillRecommendations(locale));
 }
 
 async function loadFeedItems(categoryId: FeedCategoryId | "all", forceRefresh: boolean) {

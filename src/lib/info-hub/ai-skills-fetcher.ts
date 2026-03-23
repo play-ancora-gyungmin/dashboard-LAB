@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import { APP_META } from "@/lib/app-meta";
+import type { AppLocale } from "@/lib/locale";
 import type {
   AiSkillModel,
   AiSkillRecommendationSection,
@@ -90,16 +91,16 @@ export async function fetchAiSkillTrendFeed(): Promise<FeedItem[]> {
   return deduped.sort((left, right) => (right.extra?.score ?? 0) - (left.extra?.score ?? 0));
 }
 
-export async function fetchAiSkillRecommendations(): Promise<AiSkillRecommendationsResponse> {
+export async function fetchAiSkillRecommendations(locale: AppLocale = "ko"): Promise<AiSkillRecommendationsResponse> {
   const projectSignals = await readCurrentProjectSignals();
   const groups = await Promise.all(
     MODEL_SKILL_QUERIES.map(async (query) => {
       const items = await fetchModelSkillItems(query, ITEMS_PER_MODEL);
       return {
         model: query.model,
-        summary: query.summary,
+        summary: getModelSummary(query.model, locale),
         items: items
-          .map((item) => withRecommendationReason(item, projectSignals))
+          .map((item) => withRecommendationReason(item, projectSignals, locale))
           .sort((left, right) => (right.extra?.score ?? 0) - (left.extra?.score ?? 0))
           .slice(0, ITEMS_PER_MODEL),
       } satisfies AiSkillRecommendationSection;
@@ -268,14 +269,20 @@ async function readCurrentProjectSignals(): Promise<string[]> {
   }
 }
 
-function withRecommendationReason(item: FeedItem, projectSignals: string[]): FeedItem {
+function withRecommendationReason(item: FeedItem, projectSignals: string[], locale: AppLocale): FeedItem {
   const matchedSignals = projectSignals.filter((signal) => matchesSignal(item, signal));
-  const fallbackReason = item.extra?.model === "General"
-    ? "모델 종속성이 낮아 현재 워크플로우에 범용으로 붙이기 좋습니다."
-    : `${item.extra?.model ?? "AI"} 워크플로우에 바로 실험하기 좋은 공개 스킬 후보입니다.`;
+  const fallbackReason = locale === "en"
+    ? item.extra?.model === "General"
+      ? "This is model-agnostic enough to fit into the current workflow as a general tool."
+      : `This looks like a practical public skill candidate to try in a ${item.extra?.model ?? "AI"} workflow.`
+    : item.extra?.model === "General"
+      ? "모델 종속성이 낮아 현재 워크플로우에 범용으로 붙이기 좋습니다."
+      : `${item.extra?.model ?? "AI"} 워크플로우에 바로 실험하기 좋은 공개 스킬 후보입니다.`;
 
   const recommendationReason = matchedSignals.length > 0
-    ? `현재 프로젝트가 ${matchedSignals.slice(0, 2).join(", ")} 기반이라 연동 포인트가 분명합니다.`
+    ? locale === "en"
+      ? `Your current project already uses ${matchedSignals.slice(0, 2).join(", ")}, so the integration points are clearer.`
+      : `현재 프로젝트가 ${matchedSignals.slice(0, 2).join(", ")} 기반이라 연동 포인트가 분명합니다.`
     : fallbackReason;
 
   return {
@@ -325,4 +332,22 @@ function dedupeFeedItems(items: FeedItem[]) {
 
 function compactTags(tags: string[]) {
   return [...new Set(tags.filter(Boolean))].slice(0, 6);
+}
+
+function getModelSummary(model: AiSkillModel, locale: AppLocale) {
+  if (locale === "en") {
+    return {
+      Claude: "Public skills and tools that fit Claude Code, CLAUDE.md, and prompt-driven workflows.",
+      Codex: "Repos and packages that map well to Codex-based coding, review, and automation workflows.",
+      Gemini: "Public skill candidates that are easy to connect to Gemini CLI and GEMINI.md workflows.",
+      General: "Reusable agent, prompt, and tool candidates that are less tied to a single model.",
+    }[model];
+  }
+
+  return {
+    Claude: "Claude Code, CLAUDE.md, 프롬프트 운영 흐름에 맞는 공개 스킬과 도구를 모았습니다.",
+    Codex: "Codex 기반 코드 작업, 리뷰, 자동화 흐름에 맞는 레포와 패키지를 모았습니다.",
+    Gemini: "Gemini CLI와 GEMINI.md 워크플로우에 연결하기 쉬운 공개 스킬 후보입니다.",
+    General: "모델에 종속되지 않고 재사용하기 좋은 에이전트/프롬프트/도구 계열 후보입니다.",
+  }[model];
 }

@@ -1,15 +1,19 @@
 "use client";
 
+import { useLocale } from "@/components/layout/LocaleProvider";
+import { getInfoHubCopy } from "@/features/info-hub/copy";
 import type { SecurityAuditResponse } from "@/lib/types";
 
 export function SecurityAudit({ data }: { data: SecurityAuditResponse | null }) {
+  const { locale } = useLocale();
+  const copy = getInfoHubCopy(locale);
   if (!data) {
     return null;
   }
 
   return (
     <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-      <p className="text-sm font-semibold text-white">보안 알림</p>
+      <p className="text-sm font-semibold text-white">{copy.securityTitle}</p>
       <div className="mt-4 space-y-3">
         {data.items.slice(0, 8).map((item) => (
           <div key={item.project} className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
